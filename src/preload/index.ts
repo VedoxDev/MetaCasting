@@ -23,6 +23,8 @@ const api = {
   deleteProfile: (id: string): Promise<void> => ipcRenderer.invoke('config:deleteProfile', id),
   getProfilesPath: (): Promise<string> => ipcRenderer.invoke('config:getProfilesPath'),
   openProfilesFolder: (): Promise<void> => ipcRenderer.invoke('config:openProfilesFolder'),
+  setDeviceProfile: (serial: string, profileId: string): Promise<void> => ipcRenderer.invoke('config:setDeviceProfile', serial, profileId),
+  clearDeviceProfile: (serial: string): Promise<void> => ipcRenderer.invoke('config:clearDeviceProfile', serial),
 }
 
 if (process.contextIsolated) {

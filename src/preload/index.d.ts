@@ -30,6 +30,7 @@ export interface Profile {
 export interface Settings {
   activeProfileId: string
   deviceNames: Record<string, string>
+  deviceProfiles: Record<string, string>
 }
 
 export interface Api {
@@ -52,6 +53,8 @@ export interface Api {
   deleteProfile: (id: string) => Promise<void>
   getProfilesPath: () => Promise<string>
   openProfilesFolder: () => Promise<void>
+  setDeviceProfile: (serial: string, profileId: string) => Promise<void>
+  clearDeviceProfile: (serial: string) => Promise<void>
 }
 
 declare global {

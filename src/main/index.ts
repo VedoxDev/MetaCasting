@@ -55,6 +55,15 @@ app.whenReady().then(() => {
     saveSettings({ ...loadSettings(), activeProfileId: id })
   })
   ipcMain.handle('config:saveProfile', (_, profile) => saveProfile(profile))
+  ipcMain.handle('config:setDeviceProfile', (_, serial: string, profileId: string) => {
+    const s = loadSettings()
+    saveSettings({ ...s, deviceProfiles: { ...s.deviceProfiles, [serial]: profileId } })
+  })
+  ipcMain.handle('config:clearDeviceProfile', (_, serial: string) => {
+    const s = loadSettings()
+    const { [serial]: _removed, ...rest } = s.deviceProfiles
+    saveSettings({ ...s, deviceProfiles: rest })
+  })
   ipcMain.handle('config:deleteProfile', (_, id: string) => deleteProfile(id))
   ipcMain.handle('config:getProfilesPath', () => getProfilesPath())
   ipcMain.handle('config:openProfilesFolder', () => shell.openPath(getProfilesPath()))

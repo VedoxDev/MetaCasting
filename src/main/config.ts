@@ -19,6 +19,7 @@ export interface Profile {
 export interface Settings {
   activeProfileId: string
   deviceNames: Record<string, string>
+  deviceProfiles: Record<string, string>  // serial → profileId
 }
 
 const DEFAULT_PROFILES: Profile[] = [
@@ -55,6 +56,7 @@ const DEFAULT_PROFILES: Profile[] = [
 const DEFAULT_SETTINGS: Settings = {
   activeProfileId: 'estable',
   deviceNames: {},
+  deviceProfiles: {},
 }
 
 const getProfilesDir = () => path.join(app.getPath('userData'), 'profiles')
@@ -101,7 +103,8 @@ export function loadProfiles(): Profile[] {
 
 export function loadSettings(): Settings {
   try {
-    return JSON.parse(fs.readFileSync(getSettingsPath(), 'utf-8')) as Settings
+    const saved = JSON.parse(fs.readFileSync(getSettingsPath(), 'utf-8'))
+    return { ...DEFAULT_SETTINGS, ...saved }
   } catch {
     return { ...DEFAULT_SETTINGS }
   }
