@@ -3,6 +3,7 @@ import type { DeviceInfo } from '../../../../preload/index.d'
 import quest2Img  from '../../assets/glasses/quest2.png'
 import quest3Img  from '../../assets/glasses/quest3.png'
 import quest3sImg from '../../assets/glasses/quest3s.png'
+import pico4uImg  from '../../assets/glasses/pico4u.png'
 import unknownImg from '../../assets/glasses/unknown.png'
 import defaultImg from '../../assets/glasses/default.png'
 
@@ -39,6 +40,7 @@ function resolveImage(info?: DeviceInfo): string {
   if (m.includes('quest 3s') || m.includes('quest3s')) return quest3sImg
   if (m.includes('quest 3')  || m.includes('quest3'))  return quest3Img
   if (m.includes('quest 2')  || m.includes('quest2'))  return quest2Img
+  if (m === 'a9210')                                    return pico4uImg
   return defaultImg
 }
 
