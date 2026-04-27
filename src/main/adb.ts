@@ -7,7 +7,7 @@ export interface Device {
   state: 'device' | 'unauthorized' | 'offline'
 }
 
-function getAdbPath(): string {
+export function getAdbPath(): string {
   const binDir = app.isPackaged
     ? path.join(process.resourcesPath, 'bin')
     : path.join(__dirname, '../../resources/bin')
@@ -104,6 +104,17 @@ export async function getDeviceInfo(serial: string): Promise<DeviceInfo> {
   const isVr = featuresOut.includes('android.hardware.vr.high_performance')
 
   return { serial, model: model || serial, manufacturer, battery, isVr }
+}
+
+export function runAdbCommand(args: string[]): Promise<{ out: string; code: number }> {
+  return new Promise((resolve) => {
+    const proc = spawn(getAdbPath(), args)
+    let out = ''
+    proc.stdout.on('data', (chunk: Buffer) => (out += chunk.toString()))
+    proc.stderr.on('data', (chunk: Buffer) => (out += chunk.toString()))
+    proc.on('close', (code) => resolve({ out: out.trim(), code: code ?? 0 }))
+    proc.on('error', (err) => resolve({ out: err.message, code: -1 }))
+  })
 }
 
 export async function restartAdbServer(): Promise<void> {

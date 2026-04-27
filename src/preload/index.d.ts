@@ -41,6 +41,9 @@ export interface Runtime {
 }
 
 export interface Api {
+  // ADB console
+  adbRun: (args: string[]) => Promise<{ out: string; code: number }>
+
   // Devices
   onDevicesUpdate: (cb: (devices: Device[]) => void) => () => void
   refreshDevices: () => Promise<Device[]>
