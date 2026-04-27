@@ -40,6 +40,9 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  ipcMain.on('window:minimize', () => BrowserWindow.getFocusedWindow()?.minimize())
+  ipcMain.on('window:close', () => BrowserWindow.getFocusedWindow()?.close())
+
   ipcMain.handle('devices:refresh', () => getDevices())
   ipcMain.handle('devices:getCached', () => getCachedDevices())
   ipcMain.handle('devices:request-permission', async () => {

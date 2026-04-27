@@ -11,6 +11,8 @@ const api = {
   refreshDevices: (): Promise<Device[]> => ipcRenderer.invoke('devices:refresh'),
   getCachedDevices: (): Promise<Device[]> => ipcRenderer.invoke('devices:getCached'),
   requestPermission: (): Promise<Device[]> => ipcRenderer.invoke('devices:request-permission'),
+  minimizeWindow: () => ipcRenderer.send('window:minimize'),
+  closeWindow: () => ipcRenderer.send('window:close'),
 }
 
 if (process.contextIsolated) {
