@@ -25,6 +25,11 @@ function scanRuntimes(dir: string, source: Runtime['source']): Runtime[] {
     .map((e) => ({ name: e.name, label: e.name, source }))
 }
 
+export function ensureUserRuntimesDir(): void {
+  const dir = getUserRuntimesDir()
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+}
+
 export function listRuntimes(): Runtime[] {
   const bundled = scanRuntimes(getBundledRuntimesDir(), 'bundled')
   const user    = scanRuntimes(getUserRuntimesDir(), 'user')
