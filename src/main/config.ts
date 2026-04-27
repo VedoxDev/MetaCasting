@@ -19,7 +19,8 @@ export interface Profile {
 export interface Settings {
   activeProfileId: string
   deviceNames: Record<string, string>
-  deviceProfiles: Record<string, string>  // serial → profileId
+  deviceProfiles: Record<string, string>   // serial → profileId
+  deviceRuntimes: Record<string, string>   // serial → runtime name
 }
 
 const DEFAULT_PROFILES: Profile[] = [
@@ -57,6 +58,7 @@ const DEFAULT_SETTINGS: Settings = {
   activeProfileId: 'estable',
   deviceNames: {},
   deviceProfiles: {},
+  deviceRuntimes: {},
 }
 
 const getProfilesDir = () => path.join(app.getPath('userData'), 'profiles')

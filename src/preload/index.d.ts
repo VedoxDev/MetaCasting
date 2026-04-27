@@ -31,6 +31,13 @@ export interface Settings {
   activeProfileId: string
   deviceNames: Record<string, string>
   deviceProfiles: Record<string, string>
+  deviceRuntimes: Record<string, string>
+}
+
+export interface Runtime {
+  name: string
+  label: string
+  source: 'bundled' | 'user'
 }
 
 export interface Api {
@@ -55,6 +62,22 @@ export interface Api {
   openProfilesFolder: () => Promise<void>
   setDeviceProfile: (serial: string, profileId: string) => Promise<void>
   clearDeviceProfile: (serial: string) => Promise<void>
+
+  // Runtimes
+  listRuntimes: () => Promise<Runtime[]>
+  getRuntimesPath: () => Promise<string>
+  openRuntimesFolder: () => Promise<void>
+  setDeviceRuntime: (serial: string, name: string) => Promise<void>
+  clearDeviceRuntime: (serial: string) => Promise<void>
+
+  // Cast
+  castStart: (serial: string, deviceModel: string) => Promise<void>
+  castStop: () => Promise<void>
+  castStatus: () => Promise<boolean>
+  onCastOutput: (cb: (line: string) => void) => () => void
+  onCastError: (cb: (msg: string) => void) => () => void
+  onCastStarted: (cb: (serial: string) => void) => () => void
+  onCastStopped: (cb: (code: number | null) => void) => () => void
 }
 
 declare global {

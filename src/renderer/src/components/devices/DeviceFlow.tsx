@@ -4,6 +4,7 @@ import quest2Img  from '../../assets/glasses/quest2.png'
 import quest3Img  from '../../assets/glasses/quest3.png'
 import quest3sImg from '../../assets/glasses/quest3s.png'
 import unknownImg from '../../assets/glasses/unknown.png'
+import defaultImg from '../../assets/glasses/default.png'
 
 export type Screen =
   | { type: 'searching' }
@@ -14,7 +15,7 @@ export type Screen =
   | { type: 'ready'; info: DeviceInfo }
   | { type: 'casting'; info: DeviceInfo }
 
-import type { Profile } from '../../../../preload/index.d'
+import type { Profile, Runtime } from '../../../../preload/index.d'
 
 interface DeviceFlowProps {
   screen: Screen
@@ -22,11 +23,14 @@ interface DeviceFlowProps {
   profiles: Profile[]
   activeProfileId: string
   pinnedProfileId: string | null
+  runtimes: Runtime[]
+  activeRuntimeName: string | null
   onRequest: () => void
   onCast: () => void
   onStop: () => void
   onProfileChange: (id: string) => void
   onPinProfile: (pin: boolean) => void
+  onRuntimeChange: (name: string | null) => void
 }
 
 function resolveImage(info?: DeviceInfo): string {
@@ -35,7 +39,7 @@ function resolveImage(info?: DeviceInfo): string {
   if (m.includes('quest 3s') || m.includes('quest3s')) return quest3sImg
   if (m.includes('quest 3')  || m.includes('quest3'))  return quest3Img
   if (m.includes('quest 2')  || m.includes('quest2'))  return quest2Img
-  return unknownImg
+  return defaultImg
 }
 
 const IMAGE_FILTER: Record<Screen['type'], string> = {
@@ -225,7 +229,142 @@ function ProfileSelector({ profiles, activeProfileId, pinnedProfileId, disabled,
   )
 }
 
-function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProfileId, onRequest, onCast, onStop, onProfileChange, onPinProfile }: DeviceFlowProps) {
+function RuntimeSelector({ runtimes, activeRuntimeName, disabled, onRuntimeChange }: {
+  runtimes: Runtime[]
+  activeRuntimeName: string | null
+  disabled: boolean
+  onRuntimeChange: (name: string | null) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const overridden = activeRuntimeName !== null
+  const activeLabel = overridden
+    ? (runtimes.find((r) => r.name === activeRuntimeName)?.label ?? activeRuntimeName)
+    : 'Auto-detectar'
+
+  function pick(name: string | null) {
+    onRuntimeChange(name)
+    setOpen(false)
+  }
+
+  return (
+    <div className="flex flex-col gap-2 w-full max-w-xs select-none">
+      <div className="relative">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setOpen((v) => !v)}
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: open ? '#E6F4F5' : 'white',
+            borderColor: open ? '#007A87' : '#e2e8f0',
+            color: '#334155',
+          }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <svg viewBox="0 0 14 14" fill="none" stroke="#007A87" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 flex-shrink-0">
+              <rect x="1" y="3" width="12" height="8" rx="1.5" />
+              <path d="M3.5 6.5l2 1.5-2 1.5M7.5 9.5h3" />
+            </svg>
+            <span className="truncate">{activeLabel}</span>
+            {overridden && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: '#E6F4F5', color: '#007A87' }}>
+                manual
+              </span>
+            )}
+          </div>
+          <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" className="w-2.5 flex-shrink-0 transition-transform duration-200" style={{ transform: open ? 'rotate(180deg)' : 'none', color: '#94a3b8' }}>
+            <path d="M1 1l4 4 4-4" />
+          </svg>
+        </button>
+
+        {open && (
+          <div className="absolute z-10 bottom-full mb-1 w-full bg-white rounded-lg border border-slate-200 shadow-lg overflow-y-auto max-h-48">
+            <button
+              type="button"
+              onClick={() => pick(null)}
+              className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-left transition-colors hover:bg-slate-50"
+              style={{ color: !overridden ? '#007A87' : '#334155', fontWeight: !overridden ? 700 : 500 }}
+            >
+              <span>Auto-detectar</span>
+              {!overridden && (
+                <svg viewBox="0 0 12 10" fill="none" stroke="#007A87" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 flex-shrink-0">
+                  <path d="M1 5l3.5 3.5L11 1" />
+                </svg>
+              )}
+            </button>
+            {runtimes.map((r) => {
+              const isSelected = r.name === activeRuntimeName
+              return (
+                <button
+                  key={r.name}
+                  type="button"
+                  onClick={() => pick(r.name)}
+                  className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-left transition-colors hover:bg-slate-50"
+                  style={{ color: isSelected ? '#007A87' : '#334155', fontWeight: isSelected ? 700 : 500 }}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="truncate">{r.label}</span>
+                    <span className="text-[10px] text-slate-400 flex-shrink-0">{r.source === 'user' ? 'usuario' : 'incluido'}</span>
+                  </div>
+                  {isSelected && (
+                    <svg viewBox="0 0 12 10" fill="none" stroke="#007A87" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 flex-shrink-0">
+                      <path d="M1 5l3.5 3.5L11 1" />
+                    </svg>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+      <p className="text-[11px] text-slate-400 leading-snug">
+        Binario scrcpy a usar. <span className="font-medium text-slate-500">Auto-detectar</span> elige según el modelo del dispositivo.
+      </p>
+    </div>
+  )
+}
+
+function AdvancedOptions({ runtimes, activeRuntimeName, disabled, onRuntimeChange }: {
+  runtimes: Runtime[]
+  activeRuntimeName: string | null
+  disabled: boolean
+  onRuntimeChange: (name: string | null) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="w-full max-w-xs">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 text-[11px] text-slate-300 hover:text-slate-400 transition-colors select-none"
+      >
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+          <rect x="1" y="3" width="12" height="8" rx="1.5" />
+          <path d="M3.5 6.5l2 1.5-2 1.5M7.5 9.5h3" />
+        </svg>
+        <span>Opciones técnicas</span>
+        {activeRuntimeName !== null && (
+          <span className="ml-1 px-1.5 py-px rounded-full text-[10px] font-bold" style={{ background: '#E6F4F5', color: '#007A87' }}>
+            {activeRuntimeName}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div className="mt-2">
+          <RuntimeSelector
+            runtimes={runtimes}
+            activeRuntimeName={activeRuntimeName}
+            disabled={disabled}
+            onRuntimeChange={onRuntimeChange}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProfileId, runtimes, activeRuntimeName, onRequest, onCast, onStop, onProfileChange, onPinProfile, onRuntimeChange }: DeviceFlowProps) {
   switch (screen.type) {
     case 'searching':
       return (
@@ -307,6 +446,13 @@ function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProf
             disabled={casting}
             onProfileChange={onProfileChange}
             onPinProfile={onPinProfile}
+          />
+
+          <AdvancedOptions
+            runtimes={runtimes}
+            activeRuntimeName={activeRuntimeName}
+            disabled={casting}
+            onRuntimeChange={onRuntimeChange}
           />
 
           {casting ? (
