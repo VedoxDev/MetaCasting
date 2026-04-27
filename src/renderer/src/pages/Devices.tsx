@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Device, Profile, Settings } from '../../../preload/index.d'
+import type { Device, Profile, Runtime, Settings } from '../../../preload/index.d'
 import { DeviceFlow } from '../components/devices/DeviceFlow'
 import type { Screen } from '../components/devices/DeviceFlow'
 
@@ -7,7 +7,8 @@ export default function Devices() {
   const [screen, setScreen] = useState<Screen>({ type: 'searching' })
   const [requesting, setRequesting] = useState(false)
   const [profiles, setProfiles] = useState<Profile[]>([])
-  const [settings, setSettings] = useState<Settings>({ activeProfileId: 'estable', deviceNames: {}, deviceProfiles: {} })
+  const [runtimes, setRuntimes] = useState<Runtime[]>([])
+  const [settings, setSettings] = useState<Settings>({ activeProfileId: 'estable', deviceNames: {}, deviceProfiles: {}, deviceRuntimes: {} })
 
   const activeSerial =
     screen.type === 'ready'    ? screen.info.serial :
@@ -17,11 +18,13 @@ export default function Devices() {
 
   const pinnedProfileId = activeSerial ? (settings.deviceProfiles[activeSerial] ?? null) : null
   const activeProfileId = pinnedProfileId ?? settings.activeProfileId
+  const activeRuntimeName = activeSerial ? (settings.deviceRuntimes[activeSerial] ?? null) : null
 
   async function reloadConfig() {
-    const [p, s] = await Promise.all([window.api.getProfiles(), window.api.getSettings()])
+    const [p, s, r] = await Promise.all([window.api.getProfiles(), window.api.getSettings(), window.api.listRuntimes()])
     setProfiles(p)
     setSettings(s)
+    setRuntimes(r)
   }
 
   function applyDevices(devices: Device[]) {
@@ -50,15 +53,21 @@ export default function Devices() {
     reloadConfig()
 
     let mounted = true
-    const unsub = window.api.onDevicesUpdate((devices) => {
+    const unsubDevices = window.api.onDevicesUpdate((devices) => {
       if (mounted) applyDevices(devices)
+    })
+    const unsubStopped = window.api.onCastStopped(() => {
+      if (!mounted) return
+      setScreen((prev) =>
+        prev.type === 'casting' ? { type: 'ready', info: prev.info } : prev
+      )
     })
     window.api.getCachedDevices().then((devices) => {
       if (!mounted) return
       if (devices.length === 0) setScreen({ type: 'no-device' })
       else applyDevices(devices)
     })
-    return () => { mounted = false; unsub() }
+    return () => { mounted = false; unsubDevices(); unsubStopped() }
   }, [])
 
   const loadingSerial = screen.type === 'loading' ? screen.serial : null
@@ -81,14 +90,18 @@ export default function Devices() {
     else applyDevices(devices)
   }
 
-  function handleCast() {
+  async function handleCast() {
     if (screen.type !== 'ready') return
-    setScreen({ type: 'casting', info: screen.info })
+    const { info } = screen
+    setScreen({ type: 'casting', info })
+    await window.api.castStart(info.serial, info.model)
   }
 
-  function handleStop() {
+  async function handleStop() {
     if (screen.type !== 'casting') return
-    setScreen({ type: 'ready', info: screen.info })
+    const { info } = screen
+    await window.api.castStop()
+    setScreen({ type: 'ready', info })
   }
 
   async function handleProfileChange(profileId: string) {
@@ -98,6 +111,20 @@ export default function Devices() {
     } else {
       await window.api.setActiveProfile(profileId)
       setSettings((s) => ({ ...s, activeProfileId: profileId }))
+    }
+  }
+
+  async function handleRuntimeChange(name: string | null) {
+    if (!activeSerial) return
+    if (name === null) {
+      await window.api.clearDeviceRuntime(activeSerial)
+      setSettings((s) => {
+        const { [activeSerial]: _, ...rest } = s.deviceRuntimes
+        return { ...s, deviceRuntimes: rest }
+      })
+    } else {
+      await window.api.setDeviceRuntime(activeSerial, name)
+      setSettings((s) => ({ ...s, deviceRuntimes: { ...s.deviceRuntimes, [activeSerial]: name } }))
     }
   }
 
@@ -123,11 +150,14 @@ export default function Devices() {
         profiles={profiles}
         activeProfileId={activeProfileId}
         pinnedProfileId={pinnedProfileId}
+        runtimes={runtimes}
+        activeRuntimeName={activeRuntimeName}
         onRequest={handleRequest}
         onCast={handleCast}
         onStop={handleStop}
         onProfileChange={handleProfileChange}
         onPinProfile={handlePinProfile}
+        onRuntimeChange={handleRuntimeChange}
       />
     </div>
   )

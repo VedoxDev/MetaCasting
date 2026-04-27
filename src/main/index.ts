@@ -4,6 +4,8 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { startPolling, stopPolling, getDevices, getCachedDevices, getDeviceInfo, restartAdbServer } from './adb'
 import { initConfig, loadProfiles, loadSettings, saveSettings, saveProfile, deleteProfile, getProfilesPath } from './config'
+import { listRuntimes, getRuntimesPath } from './runtimes'
+import { startCast, stopCast, isCasting } from './scrcpy'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -55,6 +57,19 @@ app.whenReady().then(() => {
     saveSettings({ ...loadSettings(), activeProfileId: id })
   })
   ipcMain.handle('config:saveProfile', (_, profile) => saveProfile(profile))
+  ipcMain.handle('runtimes:list', () => listRuntimes())
+  ipcMain.handle('runtimes:getPath', () => getRuntimesPath())
+  ipcMain.handle('runtimes:openFolder', () => shell.openPath(getRuntimesPath()))
+  ipcMain.handle('runtimes:setDeviceRuntime', (_, serial: string, name: string) => {
+    const s = loadSettings()
+    saveSettings({ ...s, deviceRuntimes: { ...s.deviceRuntimes, [serial]: name } })
+  })
+  ipcMain.handle('runtimes:clearDeviceRuntime', (_, serial: string) => {
+    const s = loadSettings()
+    const { [serial]: _removed, ...rest } = s.deviceRuntimes
+    saveSettings({ ...s, deviceRuntimes: rest })
+  })
+
   ipcMain.handle('config:setDeviceProfile', (_, serial: string, profileId: string) => {
     const s = loadSettings()
     saveSettings({ ...s, deviceProfiles: { ...s.deviceProfiles, [serial]: profileId } })
@@ -67,6 +82,10 @@ app.whenReady().then(() => {
   ipcMain.handle('config:deleteProfile', (_, id: string) => deleteProfile(id))
   ipcMain.handle('config:getProfilesPath', () => getProfilesPath())
   ipcMain.handle('config:openProfilesFolder', () => shell.openPath(getProfilesPath()))
+
+  ipcMain.handle('cast:start', (_, serial: string, deviceModel: string) => startCast(serial, deviceModel))
+  ipcMain.handle('cast:stop', () => stopCast())
+  ipcMain.handle('cast:status', () => isCasting())
 
   ipcMain.handle('devices:request-permission', async () => {
     await restartAdbServer()
