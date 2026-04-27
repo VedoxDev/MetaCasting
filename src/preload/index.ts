@@ -1,12 +1,18 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { Device } from '../main/adb'
 
-// Custom APIs for renderer
-const api = {}
+const api = {
+  onDevicesUpdate: (cb: (devices: Device[]) => void) => {
+    const handler = (_: unknown, devices: Device[]) => cb(devices)
+    ipcRenderer.on('devices:update', handler)
+    return () => ipcRenderer.removeListener('devices:update', handler)
+  },
+  refreshDevices: (): Promise<Device[]> => ipcRenderer.invoke('devices:refresh'),
+  getCachedDevices: (): Promise<Device[]> => ipcRenderer.invoke('devices:getCached'),
+  requestPermission: (): Promise<Device[]> => ipcRenderer.invoke('devices:request-permission'),
+}
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
