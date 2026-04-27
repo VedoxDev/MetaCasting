@@ -20,7 +20,7 @@ export default function Profiles() {
 
   async function handleSetActive(id: string) {
     await window.api.setActiveProfile(id)
-    setActiveProfileId(id)
+    reload()
   }
 
   async function handleSave(profile: Profile) {

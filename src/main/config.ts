@@ -91,6 +91,7 @@ export function initConfig(): void {
 export function loadProfiles(): Profile[] {
   const profilesDir = getProfilesDir()
   ensureDir(profilesDir)
+  const { activeProfileId } = loadSettings()
   return fs
     .readdirSync(profilesDir)
     .filter((f) => f.endsWith('.json'))
@@ -100,6 +101,11 @@ export function loadProfiles(): Profile[] {
       } catch {
         return []
       }
+    })
+    .sort((a, b) => {
+      if (a.id === activeProfileId) return -1
+      if (b.id === activeProfileId) return 1
+      return 0
     })
 }
 
