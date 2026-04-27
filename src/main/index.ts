@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { startPolling, stopPolling, getDevices, getCachedDevices, getDeviceInfo, restartAdbServer, runAdbCommand } from './adb'
 import { initConfig, loadProfiles, loadSettings, saveSettings, saveProfile, deleteProfile, getProfilesPath } from './config'
-import { listRuntimes, getRuntimesPath } from './runtimes'
+import { listRuntimes, getRuntimesPath, ensureUserRuntimesDir } from './runtimes'
 import { startCast, stopCast, isCasting } from './scrcpy'
 
 function createWindow(): void {
@@ -44,6 +44,7 @@ app.whenReady().then(() => {
   })
 
   initConfig()
+  ensureUserRuntimesDir()
 
   ipcMain.on('window:minimize', () => BrowserWindow.getFocusedWindow()?.minimize())
   ipcMain.on('window:close', () => BrowserWindow.getFocusedWindow()?.close())
