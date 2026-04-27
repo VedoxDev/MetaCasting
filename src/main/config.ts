@@ -26,7 +26,7 @@ export interface Settings {
 const DEFAULT_PROFILES: Profile[] = [
   {
     id: 'estable',
-    label: 'Quest 2 — Estable',
+    label: 'Quest 2 / 3S — Estable',
     windowTitle: 'MetaCasting (Estable)',
     crop: '1600:900:2000:500',
     maxSize: 720,
@@ -37,11 +37,22 @@ const DEFAULT_PROFILES: Profile[] = [
   },
   {
     id: 'calidad',
-    label: 'Quest 2 — Calidad',
+    label: 'Quest 2 / 3S — Calidad',
     windowTitle: 'MetaCasting (Calidad)',
     crop: '1600:900:2000:500',
     maxSize: 1080,
     videoBitrate: '8M',
+    maxFps: 60,
+    audioDup: true,
+    alwaysOnTop: true,
+  },
+  {
+    id: 'pico4',
+    label: 'Pico 4 Ultra',
+    windowTitle: 'MetaCasting (Pico 4)',
+    crop: '1920:1080:2280:540',
+    maxSize: 1080,
+    videoBitrate: '10M',
     maxFps: 60,
     audioDup: true,
     alwaysOnTop: true,
