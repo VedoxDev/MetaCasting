@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { startPolling, stopPolling, getDevices, getCachedDevices, restartAdbServer } from './adb'
+import { startPolling, stopPolling, getDevices, getCachedDevices, getDeviceInfo, restartAdbServer } from './adb'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -45,6 +45,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle('devices:refresh', () => getDevices())
   ipcMain.handle('devices:getCached', () => getCachedDevices())
+  ipcMain.handle('devices:getInfo', (_, serial: string) => getDeviceInfo(serial))
   ipcMain.handle('devices:request-permission', async () => {
     await restartAdbServer()
     return getDevices()

@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import type { Device } from '../main/adb'
+import type { Device, DeviceInfo } from '../main/adb'
 
 const api = {
   onDevicesUpdate: (cb: (devices: Device[]) => void) => {
@@ -10,6 +10,7 @@ const api = {
   },
   refreshDevices: (): Promise<Device[]> => ipcRenderer.invoke('devices:refresh'),
   getCachedDevices: (): Promise<Device[]> => ipcRenderer.invoke('devices:getCached'),
+  getDeviceInfo: (serial: string): Promise<DeviceInfo> => ipcRenderer.invoke('devices:getInfo', serial),
   requestPermission: (): Promise<Device[]> => ipcRenderer.invoke('devices:request-permission'),
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   closeWindow: () => ipcRenderer.send('window:close'),

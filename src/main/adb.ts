@@ -73,6 +73,39 @@ export function getCachedDevices(): Device[] {
   return lastDevices
 }
 
+export interface DeviceInfo {
+  serial: string
+  model: string
+  manufacturer: string
+  battery: number | null
+  isVr: boolean
+}
+
+function runAdbSerial(serial: string, args: string[]): Promise<string> {
+  return new Promise((resolve) => {
+    const proc = spawn(getAdbPath(), ['-s', serial, ...args])
+    let stdout = ''
+    proc.stdout.on('data', (chunk: Buffer) => (stdout += chunk.toString()))
+    proc.on('close', () => resolve(stdout.trim()))
+    proc.on('error', () => resolve(''))
+  })
+}
+
+export async function getDeviceInfo(serial: string): Promise<DeviceInfo> {
+  const [model, manufacturer, batteryOut, featuresOut] = await Promise.all([
+    runAdbSerial(serial, ['shell', 'getprop', 'ro.product.model']),
+    runAdbSerial(serial, ['shell', 'getprop', 'ro.product.manufacturer']),
+    runAdbSerial(serial, ['shell', 'dumpsys', 'battery']),
+    runAdbSerial(serial, ['shell', 'pm', 'list', 'features']),
+  ])
+
+  const batteryMatch = batteryOut.match(/level:\s*(\d+)/)
+  const battery = batteryMatch ? parseInt(batteryMatch[1]) : null
+  const isVr = featuresOut.includes('android.hardware.vr.high_performance')
+
+  return { serial, model: model || serial, manufacturer, battery, isVr }
+}
+
 export async function restartAdbServer(): Promise<void> {
   return new Promise((resolve) => {
     const kill = spawn(getAdbPath(), ['kill-server'])
