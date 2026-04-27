@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+@theme {
+  --color-teal: #007A87;
+  --color-teal-light: #4BBFBF;
+  --color-teal-subtle: #E6F4F5;
+  --color-crimson: #8B1A2E;
+  --color-crimson-subtle: #F9E8EB;
+}
+
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.step-in {
+  animation: step-in 0.3s ease-out both;
+}
