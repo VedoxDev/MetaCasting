@@ -10,6 +10,8 @@ export interface Api {
   refreshDevices: () => Promise<Device[]>
   getCachedDevices: () => Promise<Device[]>
   requestPermission: () => Promise<Device[]>
+  minimizeWindow: () => void
+  closeWindow: () => void
 }
 
 declare global {
