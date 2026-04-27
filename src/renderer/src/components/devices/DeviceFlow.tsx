@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { DeviceInfo } from '../../../../preload/index.d'
 import quest2Img  from '../../assets/glasses/quest2.png'
 import quest3Img  from '../../assets/glasses/quest3.png'
@@ -13,12 +14,19 @@ export type Screen =
   | { type: 'ready'; info: DeviceInfo }
   | { type: 'casting'; info: DeviceInfo }
 
+import type { Profile } from '../../../../preload/index.d'
+
 interface DeviceFlowProps {
   screen: Screen
   requesting: boolean
+  profiles: Profile[]
+  activeProfileId: string
+  pinnedProfileId: string | null
   onRequest: () => void
   onCast: () => void
   onStop: () => void
+  onProfileChange: (id: string) => void
+  onPinProfile: (pin: boolean) => void
 }
 
 function resolveImage(info?: DeviceInfo): string {
@@ -128,7 +136,96 @@ function StepIndicator({ active }: { active: number }) {
   )
 }
 
-function StepContent({ screen, requesting, onRequest, onCast, onStop }: DeviceFlowProps) {
+function ProfileSelector({ profiles, activeProfileId, pinnedProfileId, disabled, onProfileChange, onPinProfile }: {
+  profiles: Profile[]
+  activeProfileId: string
+  pinnedProfileId: string | null
+  disabled: boolean
+  onProfileChange: (id: string) => void
+  onPinProfile: (pin: boolean) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const pinned = pinnedProfileId !== null
+  const active = profiles.find((p) => p.id === activeProfileId) ?? profiles[0]
+
+  return (
+    <div className="flex flex-col gap-2 w-full max-w-xs select-none">
+
+      {/* Dropdown trigger */}
+      <div className="relative">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setOpen((v) => !v)}
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: open ? '#E6F4F5' : 'white',
+            borderColor: open ? '#007A87' : '#e2e8f0',
+            color: '#334155',
+          }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <svg viewBox="0 0 16 16" fill="none" stroke="#007A87" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 flex-shrink-0">
+              <rect x="2" y="2" width="12" height="12" rx="2" />
+              <path d="M5 8h6M5 5.5h3M5 10.5h4" />
+            </svg>
+            <span className="truncate">{active?.label ?? '—'}</span>
+          </div>
+          <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" className="w-2.5 flex-shrink-0 transition-transform duration-200" style={{ transform: open ? 'rotate(180deg)' : 'none', color: '#94a3b8' }}>
+            <path d="M1 1l4 4 4-4" />
+          </svg>
+        </button>
+
+        {/* Dropdown menu */}
+        {open && (
+          <div className="absolute z-10 top-full mt-1 w-full bg-white rounded-lg border border-slate-200 shadow-lg overflow-hidden">
+            {profiles.map((p) => {
+              const isSelected = p.id === activeProfileId
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => { onProfileChange(p.id); setOpen(false) }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-left transition-colors hover:bg-slate-50"
+                  style={{ color: isSelected ? '#007A87' : '#334155', fontWeight: isSelected ? 700 : 500 }}
+                >
+                  <span>{p.label}</span>
+                  {isSelected && (
+                    <svg viewBox="0 0 12 10" fill="none" stroke="#007A87" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 flex-shrink-0">
+                      <path d="M1 5l3.5 3.5L11 1" />
+                    </svg>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Pin toggle */}
+      <button
+        type="button"
+        onClick={() => onPinProfile(!pinned)}
+        disabled={disabled}
+        className="flex items-center gap-2 self-start disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <div
+          className="relative w-8 h-4 rounded-full transition-colors duration-200 flex-shrink-0"
+          style={{ background: pinned ? '#007A87' : '#cbd5e1' }}
+        >
+          <span
+            className="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform duration-200"
+            style={{ transform: pinned ? 'translateX(16px)' : 'translateX(0)' }}
+          />
+        </div>
+        <span className="text-xs text-slate-500">Recordar para este dispositivo</span>
+      </button>
+
+    </div>
+  )
+}
+
+function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProfileId, onRequest, onCast, onStop, onProfileChange, onPinProfile }: DeviceFlowProps) {
   switch (screen.type) {
     case 'searching':
       return (
@@ -203,26 +300,27 @@ function StepContent({ screen, requesting, onRequest, onCast, onStop }: DeviceFl
             <p className="text-xs text-slate-300 font-mono">{info.serial}</p>
           </div>
 
+          <ProfileSelector
+            profiles={profiles}
+            activeProfileId={activeProfileId}
+            pinnedProfileId={pinnedProfileId}
+            disabled={casting}
+            onProfileChange={onProfileChange}
+            onPinProfile={onPinProfile}
+          />
+
           {casting ? (
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-2 text-sm font-bold px-4 py-1.5 rounded-full" style={{ background: '#F9E8EB', color: '#8B1A2E' }}>
                 <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#8B1A2E' }} />
                 Emitiendo en pantalla
               </div>
-              <button
-                onClick={onStop}
-                className="px-8 py-2.5 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90"
-                style={{ background: '#8B1A2E' }}
-              >
+              <button onClick={onStop} className="px-8 py-2.5 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90" style={{ background: '#8B1A2E' }}>
                 Detener emisión
               </button>
             </div>
           ) : (
-            <button
-              onClick={onCast}
-              className="px-8 py-2.5 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90"
-              style={{ background: '#007A87' }}
-            >
+            <button onClick={onCast} className="px-8 py-2.5 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90" style={{ background: '#007A87' }}>
               Emitir en pantalla
             </button>
           )}

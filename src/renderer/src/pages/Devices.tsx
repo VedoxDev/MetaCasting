@@ -1,11 +1,28 @@
 import { useEffect, useState } from 'react'
-import type { Device } from '../../../preload/index.d'
+import type { Device, Profile, Settings } from '../../../preload/index.d'
 import { DeviceFlow } from '../components/devices/DeviceFlow'
 import type { Screen } from '../components/devices/DeviceFlow'
 
 export default function Devices() {
   const [screen, setScreen] = useState<Screen>({ type: 'searching' })
   const [requesting, setRequesting] = useState(false)
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [settings, setSettings] = useState<Settings>({ activeProfileId: 'estable', deviceNames: {}, deviceProfiles: {} })
+
+  const activeSerial =
+    screen.type === 'ready'    ? screen.info.serial :
+    screen.type === 'casting'  ? screen.info.serial :
+    screen.type === 'loading'  ? screen.serial :
+    screen.type === 'permission' ? screen.serial : null
+
+  const pinnedProfileId = activeSerial ? (settings.deviceProfiles[activeSerial] ?? null) : null
+  const activeProfileId = pinnedProfileId ?? settings.activeProfileId
+
+  async function reloadConfig() {
+    const [p, s] = await Promise.all([window.api.getProfiles(), window.api.getSettings()])
+    setProfiles(p)
+    setSettings(s)
+  }
 
   function applyDevices(devices: Device[]) {
     const authorized   = devices.find((d) => d.state === 'device')
@@ -29,24 +46,21 @@ export default function Devices() {
     }
   }
 
-  // Subscribe to push events + seed from cache on mount
   useEffect(() => {
-    let mounted = true
+    reloadConfig()
 
+    let mounted = true
     const unsub = window.api.onDevicesUpdate((devices) => {
       if (mounted) applyDevices(devices)
     })
-
     window.api.getCachedDevices().then((devices) => {
       if (!mounted) return
       if (devices.length === 0) setScreen({ type: 'no-device' })
       else applyDevices(devices)
     })
-
     return () => { mounted = false; unsub() }
   }, [])
 
-  // Fetch device info when entering loading state
   const loadingSerial = screen.type === 'loading' ? screen.serial : null
   useEffect(() => {
     if (!loadingSerial) return
@@ -70,13 +84,35 @@ export default function Devices() {
   function handleCast() {
     if (screen.type !== 'ready') return
     setScreen({ type: 'casting', info: screen.info })
-    // cast:start wired in scrcpy branch
   }
 
   function handleStop() {
     if (screen.type !== 'casting') return
     setScreen({ type: 'ready', info: screen.info })
-    // cast:stop wired in scrcpy branch
+  }
+
+  async function handleProfileChange(profileId: string) {
+    if (activeSerial && pinnedProfileId !== null) {
+      await window.api.setDeviceProfile(activeSerial, profileId)
+      setSettings((s) => ({ ...s, deviceProfiles: { ...s.deviceProfiles, [activeSerial]: profileId } }))
+    } else {
+      await window.api.setActiveProfile(profileId)
+      setSettings((s) => ({ ...s, activeProfileId: profileId }))
+    }
+  }
+
+  async function handlePinProfile(pin: boolean) {
+    if (!activeSerial) return
+    if (pin) {
+      await window.api.setDeviceProfile(activeSerial, activeProfileId)
+      setSettings((s) => ({ ...s, deviceProfiles: { ...s.deviceProfiles, [activeSerial]: activeProfileId } }))
+    } else {
+      await window.api.clearDeviceProfile(activeSerial)
+      setSettings((s) => {
+        const { [activeSerial]: _, ...rest } = s.deviceProfiles
+        return { ...s, deviceProfiles: rest }
+      })
+    }
   }
 
   return (
@@ -84,9 +120,14 @@ export default function Devices() {
       <DeviceFlow
         screen={screen}
         requesting={requesting}
+        profiles={profiles}
+        activeProfileId={activeProfileId}
+        pinnedProfileId={pinnedProfileId}
         onRequest={handleRequest}
         onCast={handleCast}
         onStop={handleStop}
+        onProfileChange={handleProfileChange}
+        onPinProfile={handlePinProfile}
       />
     </div>
   )

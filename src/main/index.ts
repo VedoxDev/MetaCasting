@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { startPolling, stopPolling, getDevices, getCachedDevices, getDeviceInfo, restartAdbServer } from './adb'
+import { initConfig, loadProfiles, loadSettings, saveSettings, saveProfile, deleteProfile, getProfilesPath } from './config'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -40,12 +41,33 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  initConfig()
+
   ipcMain.on('window:minimize', () => BrowserWindow.getFocusedWindow()?.minimize())
   ipcMain.on('window:close', () => BrowserWindow.getFocusedWindow()?.close())
 
   ipcMain.handle('devices:refresh', () => getDevices())
   ipcMain.handle('devices:getCached', () => getCachedDevices())
   ipcMain.handle('devices:getInfo', (_, serial: string) => getDeviceInfo(serial))
+  ipcMain.handle('config:getProfiles', () => loadProfiles())
+  ipcMain.handle('config:getSettings', () => loadSettings())
+  ipcMain.handle('config:setActiveProfile', (_, id: string) => {
+    saveSettings({ ...loadSettings(), activeProfileId: id })
+  })
+  ipcMain.handle('config:saveProfile', (_, profile) => saveProfile(profile))
+  ipcMain.handle('config:setDeviceProfile', (_, serial: string, profileId: string) => {
+    const s = loadSettings()
+    saveSettings({ ...s, deviceProfiles: { ...s.deviceProfiles, [serial]: profileId } })
+  })
+  ipcMain.handle('config:clearDeviceProfile', (_, serial: string) => {
+    const s = loadSettings()
+    const { [serial]: _removed, ...rest } = s.deviceProfiles
+    saveSettings({ ...s, deviceProfiles: rest })
+  })
+  ipcMain.handle('config:deleteProfile', (_, id: string) => deleteProfile(id))
+  ipcMain.handle('config:getProfilesPath', () => getProfilesPath())
+  ipcMain.handle('config:openProfilesFolder', () => shell.openPath(getProfilesPath()))
+
   ipcMain.handle('devices:request-permission', async () => {
     await restartAdbServer()
     return getDevices()

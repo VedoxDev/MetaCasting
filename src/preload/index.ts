@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { Device, DeviceInfo } from '../main/adb'
+import type { Profile, Settings } from '../main/config'
 
 const api = {
   onDevicesUpdate: (cb: (devices: Device[]) => void) => {
@@ -14,6 +15,16 @@ const api = {
   requestPermission: (): Promise<Device[]> => ipcRenderer.invoke('devices:request-permission'),
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   closeWindow: () => ipcRenderer.send('window:close'),
+
+  getProfiles: (): Promise<Profile[]> => ipcRenderer.invoke('config:getProfiles'),
+  getSettings: (): Promise<Settings> => ipcRenderer.invoke('config:getSettings'),
+  setActiveProfile: (id: string): Promise<void> => ipcRenderer.invoke('config:setActiveProfile', id),
+  saveProfile: (profile: Profile): Promise<void> => ipcRenderer.invoke('config:saveProfile', profile),
+  deleteProfile: (id: string): Promise<void> => ipcRenderer.invoke('config:deleteProfile', id),
+  getProfilesPath: (): Promise<string> => ipcRenderer.invoke('config:getProfilesPath'),
+  openProfilesFolder: (): Promise<void> => ipcRenderer.invoke('config:openProfilesFolder'),
+  setDeviceProfile: (serial: string, profileId: string): Promise<void> => ipcRenderer.invoke('config:setDeviceProfile', serial, profileId),
+  clearDeviceProfile: (serial: string): Promise<void> => ipcRenderer.invoke('config:clearDeviceProfile', serial),
 }
 
 if (process.contextIsolated) {
