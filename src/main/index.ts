@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { startPolling, stopPolling, getDevices, getCachedDevices, getDeviceInfo, restartAdbServer } from './adb'
+import { startPolling, stopPolling, getDevices, getCachedDevices, getDeviceInfo, restartAdbServer, runAdbCommand } from './adb'
 import { initConfig, loadProfiles, loadSettings, saveSettings, saveProfile, deleteProfile, getProfilesPath } from './config'
 import { listRuntimes, getRuntimesPath } from './runtimes'
 import { startCast, stopCast, isCasting } from './scrcpy'
@@ -86,6 +86,8 @@ app.whenReady().then(() => {
   ipcMain.handle('cast:start', (_, serial: string, deviceModel: string) => startCast(serial, deviceModel))
   ipcMain.handle('cast:stop', () => stopCast())
   ipcMain.handle('cast:status', () => isCasting())
+
+  ipcMain.handle('adb:run', (_, args: string[]) => runAdbCommand(args))
 
   ipcMain.handle('devices:request-permission', async () => {
     await restartAdbServer()
