@@ -36,7 +36,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
     <div>
       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
       {children}
-      {hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}
+      {hint && <p className="text-xs text-slate-500 mt-1">{hint}</p>}
     </div>
   )
 }
@@ -83,7 +83,7 @@ export function ProfileForm({ initial, existingIds, onSave, onCancel }: ProfileF
 
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <h3 className="font-extrabold text-slate-800">{isNew ? 'Nuevo perfil' : 'Editar perfil'}</h3>
-          <button onClick={onCancel} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onCancel} className="text-slate-500 hover:text-slate-600 transition-colors">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
               <line x1={18} y1={6} x2={6} y2={18} /><line x1={6} y1={6} x2={18} y2={18} />
             </svg>
@@ -114,7 +114,7 @@ export function ProfileForm({ initial, existingIds, onSave, onCancel }: ProfileF
           <hr className="border-slate-100" />
 
           <div className="flex flex-col gap-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Vídeo</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Vídeo</p>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Bitrate" hint="Ej. 4M, 8M">
                 <input className={inputClass} value={form.videoBitrate ?? ''} onChange={(e) => set('videoBitrate', e.target.value)} placeholder="4M" />
@@ -134,7 +134,7 @@ export function ProfileForm({ initial, existingIds, onSave, onCancel }: ProfileF
           <hr className="border-slate-100" />
 
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Audio y ventana</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Audio y ventana</p>
             <Toggle label="Duplicar audio (reproducir en el ordenador)" checked={!!form.audioDup} onChange={(v) => set('audioDup', v)} />
             <Toggle label="Sin audio" checked={!!form.noAudio} onChange={(v) => set('noAudio', v)} />
             <Toggle label="Ventana siempre encima" checked={!!form.alwaysOnTop} onChange={(v) => set('alwaysOnTop', v)} />

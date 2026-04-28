@@ -29,7 +29,7 @@ export function ProfileCard({ profile: p, isActive, isOnly, onSetActive, onEdit,
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0">
             <p className="font-bold text-slate-800 truncate">{p.label}</p>
-            <p className="text-xs font-mono text-slate-400 mt-0.5">{p.id}.json</p>
+            <p className="text-xs font-mono text-slate-500 mt-0.5">{p.id}.json</p>
           </div>
           {isActive && (
             <span className="flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#E6F4F5', color: '#007A87' }}>
@@ -53,7 +53,7 @@ export function ProfileCard({ profile: p, isActive, isOnly, onSetActive, onEdit,
         </div>
 
         {p.windowTitle && (
-          <p className="text-xs text-slate-400 mt-2 truncate">Ventana: "{p.windowTitle}"</p>
+          <p className="text-xs text-slate-500 mt-2 truncate">Ventana: "{p.windowTitle}"</p>
         )}
       </div>
 

@@ -22,13 +22,13 @@ export default function Logs({ logLines, onClear }: { logLines: LogLine[]; onCle
           </svg>
           <span className="text-xs font-semibold text-slate-600">Registro de scrcpy</span>
           {logLines.length > 0 && (
-            <span className="text-[10px] text-slate-400 font-mono tabular-nums">{logLines.length} líneas</span>
+            <span className="text-[10px] text-slate-500 font-mono tabular-nums">{logLines.length} líneas</span>
           )}
         </div>
         <button
           onClick={onClear}
           disabled={logLines.length === 0}
-          className="text-[11px] font-semibold text-slate-400 hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="text-[11px] font-semibold text-slate-500 hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           Limpiar
         </button>
@@ -41,13 +41,13 @@ export default function Logs({ logLines, onClear }: { logLines: LogLine[]; onCle
               <rect x="1" y="3" width="12" height="8" rx="1.5" />
               <path d="M3.5 6.5l2 1.5-2 1.5M7.5 9.5h3" />
             </svg>
-            <p className="text-sm font-semibold text-slate-300">Sin actividad</p>
-            <p className="text-xs text-slate-300 max-w-xs">El registro aparece aquí cuando se inicia una emisión</p>
+            <p className="text-sm font-semibold text-slate-500">Sin actividad</p>
+            <p className="text-xs text-slate-500 max-w-xs">El registro aparece aquí cuando se inicia una emisión</p>
           </div>
         ) : (
           logLines.map((l, i) => (
             <div key={i} className="flex items-start gap-3 font-mono text-[11px] leading-relaxed py-px">
-              <span className="text-slate-300 flex-shrink-0 pt-px tabular-nums">{formatTime(l.ts)}</span>
+              <span className="text-slate-500 flex-shrink-0 pt-px tabular-nums">{formatTime(l.ts)}</span>
               <span style={{ color: l.type === 'error' ? '#dc2626' : '#475569' }}>{l.text}</span>
             </div>
           ))
