@@ -42,7 +42,7 @@ export default function Profiles() {
         {profiles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="font-bold text-slate-600">Sin perfiles</p>
-            <p className="text-sm text-slate-400 mt-1">Crea un perfil para empezar</p>
+            <p className="text-sm text-slate-500 mt-1">Crea un perfil para empezar</p>
           </div>
         ) : (
           <ProfileCardGrid

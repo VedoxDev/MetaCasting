@@ -98,7 +98,7 @@ export default function Console() {
           {history.length > 0 && (
             <button
               onClick={() => setHistory([])}
-              className="text-[11px] font-semibold text-slate-400 hover:text-red-400 transition-colors ml-1"
+              className="text-[11px] font-semibold text-slate-500 hover:text-red-400 transition-colors ml-1"
             >
               Limpiar
             </button>
@@ -114,16 +114,16 @@ export default function Console() {
               <rect x="1" y="3" width="12" height="8" rx="1.5" />
               <path d="M3.5 6.5l2 1.5-2 1.5M7.5 9.5h3" />
             </svg>
-            <p className="text-sm font-semibold text-slate-300">Consola ADB</p>
-            <p className="text-xs text-slate-300 max-w-xs">Escribe un comando o usa los accesos rápidos. No hace falta escribir «adb» al principio.</p>
+            <p className="text-sm font-semibold text-slate-500">Consola ADB</p>
+            <p className="text-xs text-slate-500 max-w-xs">Escribe un comando o usa los accesos rápidos. No hace falta escribir «adb» al principio.</p>
           </div>
         ) : (
           history.map((h, i) => (
             <div key={i} className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-300 font-mono tabular-nums flex-shrink-0">{formatTime(h.ts)}</span>
+                <span className="text-[10px] text-slate-500 font-mono tabular-nums flex-shrink-0">{formatTime(h.ts)}</span>
                 <span className="text-[11px] font-mono font-semibold text-slate-500">
-                  <span className="text-slate-300">adb</span> {h.args.join(' ')}
+                  <span className="text-slate-500">adb</span> {h.args.join(' ')}
                 </span>
                 {h.code !== 0 && (
                   <span className="text-[10px] font-bold px-1.5 py-px rounded-full ml-auto flex-shrink-0" style={{ background: '#fee2e2', color: '#dc2626' }}>
@@ -151,7 +151,7 @@ export default function Console() {
 
       {/* Input */}
       <div className="flex items-center gap-2 px-4 py-3 border-t border-slate-100 flex-shrink-0">
-        <span className="text-[11px] font-mono font-bold text-slate-300 flex-shrink-0">adb</span>
+        <span className="text-[11px] font-mono font-bold text-slate-500 flex-shrink-0">adb</span>
         <input
           ref={inputRef}
           value={input}
@@ -159,7 +159,7 @@ export default function Console() {
           onKeyDown={onKeyDown}
           placeholder="devices / shell getprop ro.product.model / …"
           disabled={running}
-          className="flex-1 text-[11px] font-mono bg-transparent outline-none text-slate-600 placeholder:text-slate-300 disabled:opacity-50"
+          className="flex-1 text-[11px] font-mono bg-transparent outline-none text-slate-600 placeholder:text-slate-500 disabled:opacity-50"
           autoFocus
           spellCheck={false}
         />

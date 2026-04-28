@@ -184,7 +184,7 @@ function ProfileSelector({ profiles, activeProfileId, pinnedProfileId, disabled,
 
         {/* Dropdown menu */}
         {open && (
-          <div className="absolute z-10 top-full mt-1 w-full bg-white rounded-lg border border-slate-200 shadow-lg overflow-hidden">
+          <div className="absolute z-10 top-full mt-1 w-full bg-white rounded-lg border border-slate-200 shadow-lg overflow-y-auto max-h-60">
             {profiles.map((p) => {
               const isSelected = p.id === activeProfileId
               return (
@@ -306,7 +306,7 @@ function RuntimeSelector({ runtimes, activeRuntimeName, disabled, onRuntimeChang
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="truncate">{r.label}</span>
-                    <span className="text-[10px] text-slate-400 flex-shrink-0">{r.source === 'user' ? 'usuario' : 'incluido'}</span>
+                    <span className="text-[10px] text-slate-500 flex-shrink-0">{r.source === 'user' ? 'usuario' : 'incluido'}</span>
                   </div>
                   {isSelected && (
                     <svg viewBox="0 0 12 10" fill="none" stroke="#007A87" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 flex-shrink-0">
@@ -319,7 +319,7 @@ function RuntimeSelector({ runtimes, activeRuntimeName, disabled, onRuntimeChang
           </div>
         )}
       </div>
-      <p className="text-[11px] text-slate-400 leading-snug">
+      <p className="text-[11px] text-slate-500 leading-snug">
         Binario scrcpy a usar. <span className="font-medium text-slate-500">Auto-detectar</span> elige según el modelo del dispositivo.
       </p>
     </div>
@@ -339,7 +339,7 @@ function AdvancedOptions({ runtimes, activeRuntimeName, disabled, onRuntimeChang
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-[11px] text-slate-300 hover:text-slate-400 transition-colors select-none"
+        className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-500 transition-colors select-none"
       >
         <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
           <rect x="1" y="3" width="12" height="8" rx="1.5" />
@@ -372,7 +372,7 @@ function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProf
       return (
         <div className="flex flex-col items-center gap-2 text-center">
           <p className="font-bold text-slate-700 text-lg">Buscando dispositivo VR...</p>
-          <p className="text-sm text-slate-400 max-w-xs">Conecta las gafas mediante USB y asegúrate de que estén encendidas</p>
+          <p className="text-sm text-slate-500 max-w-xs">Conecta las gafas mediante USB y asegúrate de que estén encendidas</p>
         </div>
       )
 
@@ -380,7 +380,7 @@ function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProf
       return (
         <div className="flex flex-col items-center gap-2 text-center">
           <p className="font-bold text-slate-700 text-lg">Sin dispositivo conectado</p>
-          <p className="text-sm text-slate-400 max-w-xs">Conecta las gafas mediante USB para continuar</p>
+          <p className="text-sm text-slate-500 max-w-xs">Conecta las gafas mediante USB para continuar</p>
         </div>
       )
 
@@ -388,7 +388,7 @@ function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProf
       return (
         <div className="flex flex-col items-center gap-2 text-center">
           <p className="font-bold text-slate-700 text-lg">Dispositivo sin respuesta</p>
-          <p className="text-sm text-slate-400 max-w-xs">Detectado pero no responde. Comprueba que esté encendido y desbloqueado</p>
+          <p className="text-sm text-slate-500 max-w-xs">Detectado pero no responde. Comprueba que esté encendido y desbloqueado</p>
         </div>
       )
 
@@ -397,10 +397,10 @@ function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProf
         <div className="flex flex-col items-center gap-4 text-center">
           <div>
             <p className="font-bold text-slate-700 text-lg">Autorización requerida</p>
-            <p className="text-sm text-slate-400 mt-1 max-w-xs">
+            <p className="text-sm text-slate-500 mt-1 max-w-xs">
               El dispositivo necesita autorizar la depuración USB. Pulsa el botón y acepta el aviso en las gafas.
             </p>
-            <p className="text-xs text-slate-300 font-mono mt-2">{screen.serial}</p>
+            <p className="text-xs text-slate-500 font-mono mt-2">{screen.serial}</p>
           </div>
           <button
             onClick={onRequest}
@@ -425,7 +425,7 @@ function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProf
       return (
         <div className="flex flex-col items-center gap-2 text-center">
           <p className="font-bold text-slate-700 text-lg">Conectando...</p>
-          <p className="text-sm text-slate-400">Obteniendo información del dispositivo</p>
+          <p className="text-sm text-slate-500">Obteniendo información del dispositivo</p>
         </div>
       )
 
@@ -438,7 +438,7 @@ function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProf
           <div className="flex flex-col items-center gap-1.5">
             <p className="font-extrabold text-slate-800 text-xl">{info.model}</p>
             <BatteryBar level={info.battery} />
-            <p className="text-xs text-slate-300 font-mono">{info.serial}</p>
+            <p className="text-xs text-slate-500 font-mono">{info.serial}</p>
           </div>
 
           <ProfileSelector

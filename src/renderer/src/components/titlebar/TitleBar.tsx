@@ -19,7 +19,7 @@ function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   return (
     <div className="border-t border-slate-100 pt-4 flex flex-col gap-2">
-      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Preguntas frecuentes</p>
+      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Preguntas frecuentes</p>
       {FAQS.map((f, i) => (
         <Faq
           key={i}
@@ -57,7 +57,7 @@ function InfoModal({ onClose }: { onClose: () => void }) {
           <span className="font-bold text-slate-700 text-sm">Referencia técnica</span>
           <button
             onClick={onClose}
-            className="text-slate-300 hover:text-slate-500 transition-colors"
+            className="text-slate-500 hover:text-slate-500 transition-colors"
           >
             <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3 h-3">
               <line x1="1" y1="1" x2="9" y2="9" /><line x1="9" y1="1" x2="1" y2="9" />
@@ -86,7 +86,7 @@ function InfoModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="px-5 py-3 border-t border-slate-100 flex justify-between items-center">
-          <span className="text-[10px] text-slate-300 font-mono">MetaCasting v1.0.0</span>
+          <span className="text-[10px] text-slate-500 font-mono">MetaCasting v1.0.0</span>
           <button
             onClick={onClose}
             className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-50"
@@ -109,9 +109,9 @@ function Section({ title, description, path, onOpen }: {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs font-bold text-slate-600">{title}</p>
-      <p className="text-[11px] text-slate-400 leading-relaxed">{description}</p>
+      <p className="text-[11px] text-slate-500 leading-relaxed">{description}</p>
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-mono text-slate-400 truncate flex-1 bg-slate-50 border border-slate-100 rounded px-2 py-1.5">{path}</span>
+        <span className="text-[10px] font-mono text-slate-500 truncate flex-1 bg-slate-50 border border-slate-100 rounded px-2 py-1.5">{path}</span>
         <button
           type="button"
           onClick={onOpen}
@@ -142,7 +142,7 @@ function Faq({ q, open, onToggle, children }: { q: string; open: boolean; onTogg
         </svg>
       </button>
       {open && (
-        <div className="px-3 pb-3 text-[11px] text-slate-400 leading-relaxed border-t border-slate-100 pt-2">
+        <div className="px-3 pb-3 text-[11px] text-slate-500 leading-relaxed border-t border-slate-100 pt-2">
           {children}
         </div>
       )}

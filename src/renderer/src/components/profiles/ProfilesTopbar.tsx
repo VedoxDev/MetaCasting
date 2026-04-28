@@ -8,7 +8,7 @@ export function ProfilesTopbar({ count, onNew }: ProfilesTopbarProps) {
     <header className="px-8 py-5 border-b border-slate-200 bg-white flex items-center gap-4">
       <div className="flex-1">
         <h2 className="font-extrabold text-slate-800 text-lg leading-none">Perfiles</h2>
-        <p className="text-slate-400 text-xs mt-1">
+        <p className="text-slate-500 text-xs mt-1">
           {count === 0 ? 'Sin perfiles' : `${count} perfil${count !== 1 ? 'es' : ''} configurado${count !== 1 ? 's' : ''}`}
         </p>
       </div>
