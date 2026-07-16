@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Settings, Usb, Wifi } from 'lucide-react'
 import type { DeviceInfo } from '../../../../preload/index.d'
 import quest2Img  from '../../assets/glasses/quest2.png'
 import quest3Img  from '../../assets/glasses/quest3.png'
@@ -32,6 +33,8 @@ interface DeviceFlowProps {
   onProfileChange: (id: string) => void
   onPinProfile: (pin: boolean) => void
   onRuntimeChange: (name: string | null) => void
+  onWireless: () => void
+  onDisconnectWireless: () => void
 }
 
 function resolveImage(info?: DeviceInfo): string {
@@ -346,25 +349,25 @@ function AdvancedOptions({ runtimes, activeRuntimeName, disabled, onRuntimeChang
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="w-full max-w-xs">
+    <div className="w-full max-w-xs border-t border-slate-100 pt-3">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-500 transition-colors select-none"
+        className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-slate-700 transition-colors select-none mx-auto"
       >
-        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-          <rect x="1" y="3" width="12" height="8" rx="1.5" />
-          <path d="M3.5 6.5l2 1.5-2 1.5M7.5 9.5h3" />
-        </svg>
-        <span>Opciones técnicas</span>
+        <Settings className="w-3.5 h-3.5" strokeWidth={2} />
+        <span>Opciones avanzadas</span>
         {activeRuntimeName !== null && (
           <span className="ml-1 px-1.5 py-px rounded-full text-[10px] font-bold" style={{ background: '#E6F4F5', color: '#007A87' }}>
             {activeRuntimeName}
           </span>
         )}
+        <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" className="w-2 transition-transform duration-200" style={{ transform: open ? 'rotate(180deg)' : 'none' }}>
+          <path d="M1 1l4 4 4-4" />
+        </svg>
       </button>
       {open && (
-        <div className="mt-2">
+        <div className="mt-3 flex justify-center">
           <RuntimeSelector
             runtimes={runtimes}
             activeRuntimeName={activeRuntimeName}
@@ -377,7 +380,41 @@ function AdvancedOptions({ runtimes, activeRuntimeName, disabled, onRuntimeChang
   )
 }
 
-function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProfileId, runtimes, activeRuntimeName, onRequest, onCast, onStop, onProfileChange, onPinProfile, onRuntimeChange }: DeviceFlowProps) {
+// Minimal status line: a "connected" indicator + the transport serial. The
+// connection type is conveyed by the USB/Wi-Fi glyph in the status dot, and the
+// switch-to-Wi-Fi action lives next to the Emitir button — so neither is
+// repeated here. Only Wi-Fi keeps a disconnect affordance.
+function ConnectionRow({ info, disabled, onDisconnect }: {
+  info: DeviceInfo
+  disabled: boolean
+  onDisconnect: () => void
+}) {
+  const wireless = info.connection === 'wireless'
+  return (
+    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50/80">
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-green-600">
+        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+        Conectado
+      </span>
+      <span className="text-xs text-slate-500 font-mono truncate max-w-[130px]">{info.serial}</span>
+      {wireless && (
+        <>
+          <span className="w-px h-3.5 bg-slate-200" />
+          <button
+            type="button"
+            onClick={onDisconnect}
+            disabled={disabled}
+            className="text-[11px] font-semibold text-slate-500 hover:text-red-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Desconectar
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProfileId, runtimes, activeRuntimeName, onRequest, onCast, onStop, onProfileChange, onPinProfile, onRuntimeChange, onWireless, onDisconnectWireless }: DeviceFlowProps) {
   switch (screen.type) {
     case 'searching':
       return (
@@ -446,10 +483,14 @@ function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProf
       const casting = screen.type === 'casting'
       return (
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="flex flex-col items-center gap-1.5">
+          <div className="flex flex-col items-center gap-2">
             <p className="font-extrabold text-slate-800 text-xl">{info.model}</p>
+            <ConnectionRow
+              info={info}
+              disabled={casting}
+              onDisconnect={onDisconnectWireless}
+            />
             <BatteryBar level={info.battery} />
-            <p className="text-xs text-slate-500 font-mono">{info.serial}</p>
           </div>
 
           <ProfileSelector
@@ -459,13 +500,6 @@ function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProf
             disabled={casting}
             onProfileChange={onProfileChange}
             onPinProfile={onPinProfile}
-          />
-
-          <AdvancedOptions
-            runtimes={runtimes}
-            activeRuntimeName={activeRuntimeName}
-            disabled={casting}
-            onRuntimeChange={onRuntimeChange}
           />
 
           {casting ? (
@@ -479,10 +513,30 @@ function StepContent({ screen, requesting, profiles, activeProfileId, pinnedProf
               </button>
             </div>
           ) : (
-            <button onClick={onCast} className="px-8 py-2.5 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90" style={{ background: '#007A87' }}>
-              Emitir en pantalla
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={onCast} className="px-8 py-2.5 rounded-xl font-bold text-white text-sm transition-opacity hover:opacity-90" style={{ background: '#007A87' }}>
+                Emitir en pantalla
+              </button>
+              {info.connection === 'usb' && (
+                <button
+                  onClick={onWireless}
+                  title="Conectar por Wi-Fi"
+                  aria-label="Conectar por Wi-Fi"
+                  className="p-2.5 rounded-xl border-2 bg-white transition-colors hover:bg-teal-50"
+                  style={{ borderColor: '#007A87', color: '#007A87' }}
+                >
+                  <Wifi className="w-5 h-5" strokeWidth={2.2} />
+                </button>
+              )}
+            </div>
           )}
+
+          <AdvancedOptions
+            runtimes={runtimes}
+            activeRuntimeName={activeRuntimeName}
+            disabled={casting}
+            onRuntimeChange={onRuntimeChange}
+          />
         </div>
       )
     }
@@ -493,24 +547,34 @@ export function DeviceFlow(props: DeviceFlowProps) {
   const { screen } = props
   const dot = DOT[screen.type]
 
+  // The status dot doubles as a connection indicator: Wi-Fi glyph once the
+  // device is connected wirelessly, USB glyph in every other state.
+  const wireless = (screen.type === 'ready' || screen.type === 'casting') && screen.info.connection === 'wireless'
+  const ConnIcon = wireless ? Wifi : Usb
+
+  // Once fully connected (ready/casting) the Conectar → Autorizar → Emitir
+  // stepper is redundant, so it is hidden to free up space.
+  const showSteps = screen.type !== 'ready' && screen.type !== 'casting'
+
   return (
     <div className="flex flex-col items-center justify-center h-full gap-6 select-none px-8">
 
       <div className="relative">
         <DeviceImage screen={screen} />
-        <div className="absolute bottom-1 right-2">
-          {dot.pulse ? (
-            <span className="relative flex w-3.5 h-3.5">
-              <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ background: dot.color }} />
-              <span className="relative inline-flex w-3.5 h-3.5 rounded-full border-2 border-white" style={{ background: dot.color }} />
-            </span>
-          ) : (
-            <span className="w-3.5 h-3.5 rounded-full border-2 border-white block" style={{ background: dot.color }} />
-          )}
+        <div className="absolute -bottom-1 right-0">
+          <div
+            className="relative flex items-center justify-center w-8 h-8 rounded-full border-[3px] border-white shadow-md"
+            style={{ background: dot.color }}
+          >
+            {dot.pulse && (
+              <span className="absolute inset-0 rounded-full opacity-60 animate-ping" style={{ background: dot.color }} />
+            )}
+            <ConnIcon className="relative w-4 h-4 text-white" strokeWidth={2.4} />
+          </div>
         </div>
       </div>
 
-      <StepIndicator active={STEP_INDEX[screen.type]} />
+      {showSteps && <StepIndicator active={STEP_INDEX[screen.type]} />}
 
       <div key={screen.type} className="step-in flex flex-col items-center">
         <StepContent {...props} />

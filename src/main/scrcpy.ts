@@ -31,11 +31,13 @@ export function isCasting(): boolean {
   return state.process !== null
 }
 
-export function startCast(serial: string, deviceModel: string): void {
+// `serial` is the adb transport handle scrcpy targets (USB serial or ip:port);
+// `hwSerial` is the stable identity key for per-device profile/runtime pins.
+export function startCast(serial: string, hwSerial: string, deviceModel: string): void {
   if (state.process) return
 
   const settings = loadSettings()
-  const pinnedId = settings.deviceProfiles[serial] ?? autoDetectProfile(deviceModel)
+  const pinnedId = settings.deviceProfiles[hwSerial] ?? autoDetectProfile(deviceModel)
   const profile = pinnedId
     ? (loadProfiles().find((p) => p.id === pinnedId) ?? getActiveProfile())
     : getActiveProfile()
@@ -45,7 +47,7 @@ export function startCast(serial: string, deviceModel: string): void {
     return
   }
 
-  const runtimeDir = resolveRuntimeDir(serial, deviceModel, settings.deviceRuntimes)
+  const runtimeDir = resolveRuntimeDir(hwSerial, deviceModel, settings.deviceRuntimes)
   const scrcpyPath = getScrcpyPath(runtimeDir)
   const args = buildScrcpyArgs(profile, serial)
 

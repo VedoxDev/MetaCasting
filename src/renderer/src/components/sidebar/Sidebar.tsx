@@ -15,7 +15,7 @@ export default function Sidebar({ activeId, onSelect }: SidebarProps) {
         ))}
       </nav>
       <div className="px-5 py-4 border-t border-white/10">
-        <p className="text-white/30 text-xs">v1.0.0</p>
+        <p className="text-white/30 text-xs">v{__APP_VERSION__}</p>
       </div>
     </aside>
   )

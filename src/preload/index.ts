@@ -33,7 +33,11 @@ const api = {
   setDeviceRuntime: (serial: string, name: string): Promise<void> => ipcRenderer.invoke('runtimes:setDeviceRuntime', serial, name),
   clearDeviceRuntime: (serial: string): Promise<void> => ipcRenderer.invoke('runtimes:clearDeviceRuntime', serial),
 
-  castStart: (serial: string, deviceModel: string): Promise<void> => ipcRenderer.invoke('cast:start', serial, deviceModel),
+  castStart: (serial: string, hwSerial: string, deviceModel: string): Promise<void> => ipcRenderer.invoke('cast:start', serial, hwSerial, deviceModel),
+
+  enableWireless: (usbSerial: string): Promise<{ ok: boolean; ip?: string; error?: string }> => ipcRenderer.invoke('wireless:enable', usbSerial),
+  connectWireless: (ip: string): Promise<{ ok: boolean; serial?: string; error?: string }> => ipcRenderer.invoke('wireless:connect', ip),
+  disconnectWireless: (serial: string): Promise<{ ok: boolean; error?: string }> => ipcRenderer.invoke('wireless:disconnect', serial),
   castStop: (): Promise<void> => ipcRenderer.invoke('cast:stop'),
   castStatus: (): Promise<boolean> => ipcRenderer.invoke('cast:status'),
   onCastOutput: (cb: (line: string) => void) => {
