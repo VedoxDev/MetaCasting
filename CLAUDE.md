@@ -33,7 +33,7 @@ path — only the scrcpy runtime differs (see "Runtime system" below).
 
 The MVP is implemented. The app is functional end-to-end:
 
-- Electron + electron-vite + React 19 + TypeScript + Tailwind CSS 4.
+- Electron + electron-vite + React 19 + TypeScript + Tailwind CSS 4 + lucide-react icons.
 - **ADB device polling** (`adb devices` every 2s) with IPC broadcast on change.
 - **Device info** enrichment (model, manufacturer, battery, VR-capability detection, hardware
   serial, USB/Wi-Fi connection type).
@@ -89,7 +89,8 @@ Preload (contextBridge)
 Renderer process (React)
 ├── TitleBar             — custom frameless title bar (minimize / close)
 ├── Sidebar              — Dispositivos · Perfiles · Logs · Consola
-├── Devices page         — device state, info card, runtime/profile pick, Connect/Stop
+├── Devices page         — device state, info card, runtime/profile pick, Connect/Stop, Wi-Fi
+│                          connect (WirelessDialog) / disconnect
 ├── Profiles page        — CRUD over profile JSON files
 ├── Logs page            — live scrcpy output (buffered in App state, max 500 lines)
 └── Console page         — run raw adb commands
@@ -276,7 +277,10 @@ Single `BrowserWindow`, **frameless** (custom `TitleBar`), fixed **900×670**, n
 Navigation is a left sidebar (`src/renderer/src/components/sidebar/data.ts`) with four pages:
 
 1. **Dispositivos** — device status + info card, per-device runtime and profile selection,
-   the primary **Conectar / Detener** action (disabled when no device is connected).
+   the primary **Conectar / Detener** action (disabled when no device is connected). A status
+   dot on the headset image carries a USB/Wi-Fi glyph; a Wi-Fi button beside **Emitir** opens the
+   `WirelessDialog` (USB→Wi-Fi), and the connection row exposes **Desconectar** when wireless. The
+   `Conectar → Autorizar → Emitir` stepper is hidden once the device is ready.
 2. **Perfiles** — create / edit / delete profiles (card grid + form).
 3. **Logs** — live scrcpy output, buffered in `App` state (max 500 lines), clearable.
 4. **Consola** — run raw `adb` commands, with history navigation and quick presets.
@@ -284,11 +288,15 @@ Navigation is a left sidebar (`src/renderer/src/components/sidebar/data.ts`) wit
 ### Style guidelines
 
 - Tailwind CSS utility classes throughout (Tailwind v4, configured via `@tailwindcss/postcss`).
+- Icons from **lucide-react** (tree-shakeable). Prefer it over hand-rolled `<svg>` for new UI.
 - Clean, minimal aesthetic — an internal IT tool, not a consumer product.
 - No decorative gradients or heavy visual effects.
 - Semantic status colors: green = connected/active, amber = warning/pending, red = error,
   neutral gray = searching/idle.
 - The Connect button is the dominant action on the Devices page.
+- The displayed app version is injected from `package.json` at build time via a Vite `define`
+  (`__APP_VERSION__`, see `electron.vite.config.ts`) and shown in the title bar, sidebar, and
+  technical-reference modal — never hardcode a version string in the renderer.
 
 ---
 
