@@ -2,6 +2,7 @@ import { BrowserWindow } from 'electron'
 import { spawn, ChildProcess } from 'child_process'
 import { resolveRuntimeDir, getScrcpyPath } from './runtimes'
 import { buildScrcpyArgs, loadSettings, loadProfiles, getActiveProfile, autoDetectProfile } from './config'
+import { logger } from './logger'
 
 interface CastState {
   process: ChildProcess | null
@@ -51,6 +52,8 @@ export function startCast(serial: string, hwSerial: string, deviceModel: string)
   const scrcpyPath = getScrcpyPath(runtimeDir)
   const args = buildScrcpyArgs(profile, serial)
 
+  logger.info(`Cast start — serial=${serial} model="${deviceModel}" profile=${profile.id} runtime=${runtimeDir}`)
+
   const child = spawn(scrcpyPath, args, { stdio: ['ignore', 'pipe', 'pipe'] })
   state.process = child
   state.serial = serial
@@ -66,6 +69,7 @@ export function startCast(serial: string, hwSerial: string, deviceModel: string)
   child.stderr?.on('data', (data: Buffer) => {
     for (const line of data.toString().split('\n').filter(Boolean)) {
       broadcast('cast:output', line)
+      logger.warn(`[scrcpy] ${line}`)
       const friendly = mapError(line)
       if (friendly) broadcast('cast:error', friendly)
     }
@@ -74,6 +78,7 @@ export function startCast(serial: string, hwSerial: string, deviceModel: string)
   child.on('close', (code) => {
     state.process = null
     state.serial = null
+    logger.info(`Cast stopped — exit code ${code}`)
     broadcast('cast:stopped', code)
     if (code !== 0 && code !== null) {
       broadcast('cast:error', 'Error inesperado. Consulta el panel de registro para más detalles.')
@@ -83,6 +88,7 @@ export function startCast(serial: string, hwSerial: string, deviceModel: string)
   child.on('error', (err) => {
     state.process = null
     state.serial = null
+    logger.error(`Cast failed to spawn scrcpy: ${err.message}`)
     broadcast('cast:stopped', -1)
     broadcast('cast:error', `No se pudo iniciar scrcpy: ${err.message}`)
   })

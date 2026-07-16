@@ -25,13 +25,26 @@ export default function Logs({ logLines, onClear }: { logLines: LogLine[]; onCle
             <span className="text-[10px] text-slate-500 font-mono tabular-nums">{logLines.length} líneas</span>
           )}
         </div>
-        <button
-          onClick={onClear}
-          disabled={logLines.length === 0}
-          className="text-[11px] font-semibold text-slate-500 hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          Limpiar
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => window.api.openLogsFolder()}
+            title="Abre la carpeta del archivo de registro (metacasting.log) para poder enviarlo"
+            className="flex items-center gap-1.5 text-[11px] font-semibold transition-colors hover:opacity-80"
+            style={{ color: '#007A87' }}
+          >
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+              <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2H5l1 1.5h5.5A1.5 1.5 0 0 1 13 5v5.5A1.5 1.5 0 0 1 11.5 12h-9A1.5 1.5 0 0 1 1 10.5V3.5z" />
+            </svg>
+            Abrir archivo de registro
+          </button>
+          <button
+            onClick={onClear}
+            disabled={logLines.length === 0}
+            className="text-[11px] font-semibold text-slate-500 hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Limpiar
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-px">

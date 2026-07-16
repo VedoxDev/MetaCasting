@@ -300,12 +300,23 @@ Navigation is a left sidebar (`src/renderer/src/components/sidebar/data.ts`) wit
 
 ---
 
-## Logging (not yet implemented)
+## Logging (`src/main/logger.ts`)
 
-There is currently **no** file-based logger. scrcpy output is streamed to the renderer and kept
-only in memory (Logs page, capped at 500 lines). The originally-planned rotating file logger
-(`{userData}/logs/metacasting.log`, winston/pino) has **not** been built. If asked to "add
-logging," this is the gap — do not assume it exists.
+Two independent layers:
+
+- **In-memory (Logs page).** scrcpy output is streamed to the renderer and buffered in `App`
+  state, capped at 500 lines, cleared on restart. Live "what's happening right now" view.
+- **File-based (persistent).** `electron-log` writes to `{userData}/logs/metacasting.log`
+  (rotates to `metacasting.old.log` at 5 MB). `initLogger()` runs first in `app.whenReady`,
+  enables renderer-log capture and uncaught-exception catching. Log content is **English**
+  (internal), unlike the Spanish UI. Field-diagnostics tool: a trainer can retrieve it after a
+  failure even once the app is closed.
+
+Key events logged: app start/shutdown, device-list changes (`adb.ts`), cast start/stop/errors +
+raw scrcpy stderr (`scrcpy.ts`), and the full wireless flow incl. IP detection and connect
+retries (`wireless.ts`). The Logs page exposes **"Abrir archivo de registro"** (IPC
+`logs:openFolder` / `logs:getPath`) so the log folder can be opened and the file sent for
+support. Use `import { logger } from './logger'` in the main process to add log lines.
 
 ---
 
@@ -339,7 +350,6 @@ logging," this is the gap — do not assume it exists.
 - Real auto-update mechanism
 - Multi-language support
 - Any form of telemetry or analytics
-- File-based rotating logs (see Logging note above)
 
 ---
 
