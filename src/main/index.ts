@@ -7,6 +7,7 @@ import { initConfig, loadProfiles, loadSettings, saveSettings, saveProfile, dele
 import { listRuntimes, getRuntimesPath, ensureUserRuntimesDir } from './runtimes'
 import { startCast, stopCast, isCasting } from './scrcpy'
 import { enableTcpip, connectWireless, disconnectWireless } from './wireless'
+import { initLogger, logger, getLogDir, getLogFilePath } from './logger'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -38,6 +39,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  initLogger()
   electronApp.setAppUserModelId('com.metacasting.app')
 
   app.on('browser-window-created', (_, window) => {
@@ -95,6 +97,9 @@ app.whenReady().then(() => {
 
   ipcMain.handle('adb:run', (_, args: string[]) => runAdbCommand(args))
 
+  ipcMain.handle('logs:openFolder', () => shell.openPath(getLogDir()))
+  ipcMain.handle('logs:getPath', () => getLogFilePath())
+
   ipcMain.handle('devices:request-permission', async () => {
     await restartAdbServer()
     return getDevices()
@@ -109,6 +114,7 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
+  logger.info('All windows closed — shutting down')
   stopPolling()
   if (process.platform !== 'darwin') app.quit()
 })

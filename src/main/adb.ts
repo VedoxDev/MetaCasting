@@ -1,6 +1,7 @@
 import { spawn } from 'child_process'
 import path from 'path'
 import { app, BrowserWindow } from 'electron'
+import { logger } from './logger'
 
 export interface Device {
   serial: string
@@ -51,6 +52,7 @@ async function tick(): Promise<void> {
   const json = JSON.stringify(devices)
   if (json !== lastJson) {
     lastJson = json
+    logger.info(`Devices changed: ${devices.map((d) => `${d.serial}:${d.state}`).join(', ') || '(none)'}`)
     broadcast(devices)
   }
   pollTimer = setTimeout(tick, 2000)

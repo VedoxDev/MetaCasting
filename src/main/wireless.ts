@@ -1,5 +1,6 @@
 import { spawn } from 'child_process'
 import { getAdbPath } from './adb'
+import { logger } from './logger'
 
 const WIRELESS_PORT = 5555
 
@@ -49,11 +50,14 @@ function parseWlanIp(routeOutput: string): string | null {
 
 // Step 1: read the headset IP (over USB) and switch it into TCP/IP mode.
 export async function enableTcpip(usbSerial: string): Promise<EnableResult> {
+  logger.info(`Wireless: enabling TCP/IP on ${usbSerial}`)
   const route = await runAdb(['-s', usbSerial, 'shell', 'ip', 'route'])
   const ip = parseWlanIp(route.out)
+  logger.info(`Wireless: detected device IP = ${ip ?? '(none)'}`)
 
   const tcpip = await runAdb(['-s', usbSerial, 'tcpip', String(WIRELESS_PORT)])
   if (tcpip.code !== 0 && !/restarting/i.test(tcpip.out)) {
+    logger.error(`Wireless: tcpip failed — ${tcpip.out}`)
     return { ok: false, error: tcpip.out || 'No se pudo activar el modo TCP/IP.' }
   }
 
@@ -74,11 +78,14 @@ export async function connectWireless(ip: string): Promise<ConnectResult> {
   for (let attempt = 0; attempt < 6; attempt++) {
     const res = await runAdb(['connect', target])
     if (/^connected to|already connected/i.test(res.out)) {
+      logger.info(`Wireless: connected to ${target} (attempt ${attempt + 1})`)
       return { ok: true, serial: target }
     }
+    logger.warn(`Wireless: connect attempt ${attempt + 1} to ${target} failed — ${res.out}`)
     await delay(2000)
   }
 
+  logger.error(`Wireless: could not connect to ${target} after 6 attempts`)
   return {
     ok: false,
     error: 'No se pudo conectar. Comprueba que el PC y las gafas estén en la misma red Wi-Fi.',
@@ -86,6 +93,7 @@ export async function connectWireless(ip: string): Promise<ConnectResult> {
 }
 
 export async function disconnectWireless(serial: string): Promise<WirelessResult> {
+  logger.info(`Wireless: disconnecting ${serial}`)
   const res = await runAdb(['disconnect', serial])
   return { ok: res.code === 0 }
 }

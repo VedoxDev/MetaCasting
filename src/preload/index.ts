@@ -11,6 +11,8 @@ const api = {
     return () => ipcRenderer.removeListener('devices:update', handler)
   },
   adbRun: (args: string[]): Promise<{ out: string; code: number }> => ipcRenderer.invoke('adb:run', args),
+  openLogsFolder: (): Promise<void> => ipcRenderer.invoke('logs:openFolder'),
+  getLogPath: (): Promise<string> => ipcRenderer.invoke('logs:getPath'),
   refreshDevices: (): Promise<Device[]> => ipcRenderer.invoke('devices:refresh'),
   getCachedDevices: (): Promise<Device[]> => ipcRenderer.invoke('devices:getCached'),
   getDeviceInfo: (serial: string): Promise<DeviceInfo> => ipcRenderer.invoke('devices:getInfo', serial),

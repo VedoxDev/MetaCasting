@@ -46,6 +46,10 @@ export interface Api {
   // ADB console
   adbRun: (args: string[]) => Promise<{ out: string; code: number }>
 
+  // Logs (file logger)
+  openLogsFolder: () => Promise<void>
+  getLogPath: () => Promise<string>
+
   // Devices
   onDevicesUpdate: (cb: (devices: Device[]) => void) => () => void
   refreshDevices: () => Promise<Device[]>
