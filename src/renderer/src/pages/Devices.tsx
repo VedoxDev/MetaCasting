@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Device, Profile, Runtime, Settings } from '../../../preload/index.d'
-import { DeviceFlow } from '../components/devices/DeviceFlow'
+import { DeviceFlow, autoDetectProfileId } from '../components/devices/DeviceFlow'
 import type { Screen } from '../components/devices/DeviceFlow'
 
 export default function Devices() {
@@ -16,8 +16,12 @@ export default function Devices() {
     screen.type === 'loading'  ? screen.serial :
     screen.type === 'permission' ? screen.serial : null
 
+  const activeModel =
+    screen.type === 'ready'   ? screen.info.model :
+    screen.type === 'casting' ? screen.info.model : null
   const pinnedProfileId = activeSerial ? (settings.deviceProfiles[activeSerial] ?? null) : null
-  const activeProfileId = pinnedProfileId ?? settings.activeProfileId
+  const autoProfileId = activeModel ? autoDetectProfileId(activeModel) : null
+  const activeProfileId = pinnedProfileId ?? autoProfileId ?? settings.activeProfileId
   const activeRuntimeName = activeSerial ? (settings.deviceRuntimes[activeSerial] ?? null) : null
 
   async function reloadConfig() {
@@ -105,7 +109,10 @@ export default function Devices() {
   }
 
   async function handleProfileChange(profileId: string) {
-    if (activeSerial && pinnedProfileId !== null) {
+    // Pin to the device when it is already pinned OR auto-detected — otherwise a
+    // global-default edit would be masked by the auto-detected profile and the
+    // pick would appear to do nothing.
+    if (activeSerial && (pinnedProfileId !== null || autoProfileId !== null)) {
       await window.api.setDeviceProfile(activeSerial, profileId)
       setSettings((s) => ({ ...s, deviceProfiles: { ...s.deviceProfiles, [activeSerial]: profileId } }))
     } else {

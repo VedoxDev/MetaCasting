@@ -1,7 +1,7 @@
 import { BrowserWindow } from 'electron'
 import { spawn, ChildProcess } from 'child_process'
 import { resolveRuntimeDir, getScrcpyPath } from './runtimes'
-import { buildScrcpyArgs, loadSettings, loadProfiles, getActiveProfile } from './config'
+import { buildScrcpyArgs, loadSettings, loadProfiles, getActiveProfile, autoDetectProfile } from './config'
 
 interface CastState {
   process: ChildProcess | null
@@ -35,7 +35,7 @@ export function startCast(serial: string, deviceModel: string): void {
   if (state.process) return
 
   const settings = loadSettings()
-  const pinnedId = settings.deviceProfiles[serial]
+  const pinnedId = settings.deviceProfiles[serial] ?? autoDetectProfile(deviceModel)
   const profile = pinnedId
     ? (loadProfiles().find((p) => p.id === pinnedId) ?? getActiveProfile())
     : getActiveProfile()

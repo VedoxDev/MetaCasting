@@ -66,7 +66,7 @@ const DEFAULT_PROFILES: Profile[] = [
 ]
 
 const DEFAULT_SETTINGS: Settings = {
-  activeProfileId: 'estable',
+  activeProfileId: 'manual',
   deviceNames: {},
   deviceProfiles: {},
   deviceRuntimes: {},
@@ -155,6 +155,18 @@ export function getActiveProfile(): Profile | null {
 
 export function getProfilesPath(): string {
   return getProfilesDir()
+}
+
+// Auto-pick a profile from the device model, mirroring the headset image
+// detection in the renderer (DeviceFlow.resolveImage / autoDetectProfileId).
+// Returns null for unknown models, so the global activeProfileId is used.
+export function autoDetectProfile(model: string): string | null {
+  const m = model.toLowerCase()
+  if (m === 'a9210')                                   return 'pico4'
+  if (m.includes('quest 2')  || m.includes('quest2'))  return 'estable'
+  if (m.includes('quest 3s') || m.includes('quest3s')) return 'estable'
+  if (m.includes('quest 3')  || m.includes('quest3'))  return 'estable'
+  return null
 }
 
 export function buildScrcpyArgs(profile: Profile, serial: string): string[] {

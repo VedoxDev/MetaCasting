@@ -44,6 +44,17 @@ function resolveImage(info?: DeviceInfo): string {
   return defaultImg
 }
 
+// Kept in sync with resolveImage above and main/config.ts autoDetectProfile.
+// Returns null for unknown models → the global default profile is used.
+export function autoDetectProfileId(model: string): string | null {
+  const m = model.toLowerCase()
+  if (m === 'a9210')                                   return 'pico4'
+  if (m.includes('quest 2')  || m.includes('quest2'))  return 'estable'
+  if (m.includes('quest 3s') || m.includes('quest3s')) return 'estable'
+  if (m.includes('quest 3')  || m.includes('quest3'))  return 'estable'
+  return null
+}
+
 const IMAGE_FILTER: Record<Screen['type'], string> = {
   searching:   'grayscale(0.6) opacity(0.45)',
   'no-device': 'grayscale(0.6) opacity(0.45)',
