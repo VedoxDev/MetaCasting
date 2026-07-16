@@ -35,6 +35,8 @@ nsis:
   createDesktopShortcut: always
   oneClick: false
   allowToChangeInstallationDirectory: true
+portable:
+  artifactName: ${name}-${version}-portable.${ext}
 publish:
   provider: generic
   url: https://example.com/auto-updates
