@@ -38,8 +38,8 @@ export function listRuntimes(): Runtime[] {
   return [...user, ...bundled.filter((r) => !names.has(r.name))]
 }
 
-export function resolveRuntimeDir(serial: string, model: string, deviceRuntimes: Record<string, string>): string {
-  const runtimeName = deviceRuntimes[serial] ?? autoDetectRuntime(model)
+export function resolveRuntimeDir(hwSerial: string, model: string, deviceRuntimes: Record<string, string>): string {
+  const runtimeName = deviceRuntimes[hwSerial] ?? autoDetectRuntime(model)
   const userPath    = path.join(getUserRuntimesDir(), runtimeName)
   const bundledPath = path.join(getBundledRuntimesDir(), runtimeName)
   return fs.existsSync(path.join(userPath, 'scrcpy.exe')) ? userPath : bundledPath

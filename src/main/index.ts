@@ -6,6 +6,7 @@ import { startPolling, stopPolling, getDevices, getCachedDevices, getDeviceInfo,
 import { initConfig, loadProfiles, loadSettings, saveSettings, saveProfile, deleteProfile, getProfilesPath } from './config'
 import { listRuntimes, getRuntimesPath, ensureUserRuntimesDir } from './runtimes'
 import { startCast, stopCast, isCasting } from './scrcpy'
+import { enableTcpip, connectWireless, disconnectWireless } from './wireless'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -84,9 +85,13 @@ app.whenReady().then(() => {
   ipcMain.handle('config:getProfilesPath', () => getProfilesPath())
   ipcMain.handle('config:openProfilesFolder', () => shell.openPath(getProfilesPath()))
 
-  ipcMain.handle('cast:start', (_, serial: string, deviceModel: string) => startCast(serial, deviceModel))
+  ipcMain.handle('cast:start', (_, serial: string, hwSerial: string, deviceModel: string) => startCast(serial, hwSerial, deviceModel))
   ipcMain.handle('cast:stop', () => stopCast())
   ipcMain.handle('cast:status', () => isCasting())
+
+  ipcMain.handle('wireless:enable', (_, usbSerial: string) => enableTcpip(usbSerial))
+  ipcMain.handle('wireless:connect', (_, ip: string) => connectWireless(ip))
+  ipcMain.handle('wireless:disconnect', (_, serial: string) => disconnectWireless(serial))
 
   ipcMain.handle('adb:run', (_, args: string[]) => runAdbCommand(args))
 

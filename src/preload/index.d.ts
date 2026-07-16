@@ -7,6 +7,8 @@ export interface Device {
 
 export interface DeviceInfo {
   serial: string
+  hwSerial: string
+  connection: 'usb' | 'wireless'
   model: string
   manufacturer: string
   battery: number | null
@@ -73,8 +75,13 @@ export interface Api {
   setDeviceRuntime: (serial: string, name: string) => Promise<void>
   clearDeviceRuntime: (serial: string) => Promise<void>
 
+  // Wireless
+  enableWireless: (usbSerial: string) => Promise<{ ok: boolean; ip?: string; error?: string }>
+  connectWireless: (ip: string) => Promise<{ ok: boolean; serial?: string; error?: string }>
+  disconnectWireless: (serial: string) => Promise<{ ok: boolean; error?: string }>
+
   // Cast
-  castStart: (serial: string, deviceModel: string) => Promise<void>
+  castStart: (serial: string, hwSerial: string, deviceModel: string) => Promise<void>
   castStop: () => Promise<void>
   castStatus: () => Promise<boolean>
   onCastOutput: (cb: (line: string) => void) => () => void

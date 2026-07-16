@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Device, Profile, Runtime, Settings } from '../../../preload/index.d'
 import { DeviceFlow, autoDetectProfileId } from '../components/devices/DeviceFlow'
 import type { Screen } from '../components/devices/DeviceFlow'
+import { WirelessDialog } from '../components/devices/WirelessDialog'
 
 export default function Devices() {
   const [screen, setScreen] = useState<Screen>({ type: 'searching' })
@@ -9,20 +10,24 @@ export default function Devices() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [runtimes, setRuntimes] = useState<Runtime[]>([])
   const [settings, setSettings] = useState<Settings>({ activeProfileId: 'estable', deviceNames: {}, deviceProfiles: {}, deviceRuntimes: {} })
+  // The USB serial captured when the wireless dialog opens. The dialog is gated
+  // on this (not on live device state), so the tcpip-induced adb reconnect —
+  // which briefly drops the device off `adb devices` — can't unmount it.
+  const [wirelessUsbSerial, setWirelessUsbSerial] = useState<string | null>(null)
 
-  const activeSerial =
-    screen.type === 'ready'    ? screen.info.serial :
-    screen.type === 'casting'  ? screen.info.serial :
-    screen.type === 'loading'  ? screen.serial :
-    screen.type === 'permission' ? screen.serial : null
+  // Per-device config is keyed by the stable hardware serial (ro.serialno), so
+  // pins survive the USB → Wi-Fi transport change. Only available once info is
+  // loaded (ready/casting).
+  const activeInfo =
+    screen.type === 'ready'   ? screen.info :
+    screen.type === 'casting' ? screen.info : null
+  const activeHwSerial = activeInfo?.hwSerial ?? null
 
-  const activeModel =
-    screen.type === 'ready'   ? screen.info.model :
-    screen.type === 'casting' ? screen.info.model : null
-  const pinnedProfileId = activeSerial ? (settings.deviceProfiles[activeSerial] ?? null) : null
+  const activeModel = activeInfo?.model ?? null
+  const pinnedProfileId = activeHwSerial ? (settings.deviceProfiles[activeHwSerial] ?? null) : null
   const autoProfileId = activeModel ? autoDetectProfileId(activeModel) : null
   const activeProfileId = pinnedProfileId ?? autoProfileId ?? settings.activeProfileId
-  const activeRuntimeName = activeSerial ? (settings.deviceRuntimes[activeSerial] ?? null) : null
+  const activeRuntimeName = activeHwSerial ? (settings.deviceRuntimes[activeHwSerial] ?? null) : null
 
   async function reloadConfig() {
     const [p, s, r] = await Promise.all([window.api.getProfiles(), window.api.getSettings(), window.api.listRuntimes()])
@@ -98,7 +103,19 @@ export default function Devices() {
     if (screen.type !== 'ready') return
     const { info } = screen
     setScreen({ type: 'casting', info })
-    await window.api.castStart(info.serial, info.model)
+    await window.api.castStart(info.serial, info.hwSerial, info.model)
+  }
+
+  function handleOpenWireless() {
+    if (!activeInfo || activeInfo.connection !== 'usb') return
+    setWirelessUsbSerial(activeInfo.serial)
+  }
+
+  async function handleDisconnectWireless() {
+    if (!activeInfo || activeInfo.connection !== 'wireless') return
+    await window.api.disconnectWireless(activeInfo.serial)
+    // Polling will drop the device (or fall back to the USB entry if still plugged).
+    setScreen({ type: 'searching' })
   }
 
   async function handleStop() {
@@ -112,9 +129,9 @@ export default function Devices() {
     // Pin to the device when it is already pinned OR auto-detected — otherwise a
     // global-default edit would be masked by the auto-detected profile and the
     // pick would appear to do nothing.
-    if (activeSerial && (pinnedProfileId !== null || autoProfileId !== null)) {
-      await window.api.setDeviceProfile(activeSerial, profileId)
-      setSettings((s) => ({ ...s, deviceProfiles: { ...s.deviceProfiles, [activeSerial]: profileId } }))
+    if (activeHwSerial && (pinnedProfileId !== null || autoProfileId !== null)) {
+      await window.api.setDeviceProfile(activeHwSerial, profileId)
+      setSettings((s) => ({ ...s, deviceProfiles: { ...s.deviceProfiles, [activeHwSerial]: profileId } }))
     } else {
       await window.api.setActiveProfile(profileId)
       setSettings((s) => ({ ...s, activeProfileId: profileId }))
@@ -122,35 +139,35 @@ export default function Devices() {
   }
 
   async function handleRuntimeChange(name: string | null) {
-    if (!activeSerial) return
+    if (!activeHwSerial) return
     if (name === null) {
-      await window.api.clearDeviceRuntime(activeSerial)
+      await window.api.clearDeviceRuntime(activeHwSerial)
       setSettings((s) => {
-        const { [activeSerial]: _, ...rest } = s.deviceRuntimes
+        const { [activeHwSerial]: _, ...rest } = s.deviceRuntimes
         return { ...s, deviceRuntimes: rest }
       })
     } else {
-      await window.api.setDeviceRuntime(activeSerial, name)
-      setSettings((s) => ({ ...s, deviceRuntimes: { ...s.deviceRuntimes, [activeSerial]: name } }))
+      await window.api.setDeviceRuntime(activeHwSerial, name)
+      setSettings((s) => ({ ...s, deviceRuntimes: { ...s.deviceRuntimes, [activeHwSerial]: name } }))
     }
   }
 
   async function handlePinProfile(pin: boolean) {
-    if (!activeSerial) return
+    if (!activeHwSerial) return
     if (pin) {
-      await window.api.setDeviceProfile(activeSerial, activeProfileId)
-      setSettings((s) => ({ ...s, deviceProfiles: { ...s.deviceProfiles, [activeSerial]: activeProfileId } }))
+      await window.api.setDeviceProfile(activeHwSerial, activeProfileId)
+      setSettings((s) => ({ ...s, deviceProfiles: { ...s.deviceProfiles, [activeHwSerial]: activeProfileId } }))
     } else {
-      await window.api.clearDeviceProfile(activeSerial)
+      await window.api.clearDeviceProfile(activeHwSerial)
       setSettings((s) => {
-        const { [activeSerial]: _, ...rest } = s.deviceProfiles
+        const { [activeHwSerial]: _, ...rest } = s.deviceProfiles
         return { ...s, deviceProfiles: rest }
       })
     }
   }
 
   return (
-    <div className="h-full">
+    <div className="h-full relative">
       <DeviceFlow
         screen={screen}
         requesting={requesting}
@@ -165,7 +182,16 @@ export default function Devices() {
         onProfileChange={handleProfileChange}
         onPinProfile={handlePinProfile}
         onRuntimeChange={handleRuntimeChange}
+        onWireless={handleOpenWireless}
+        onDisconnectWireless={handleDisconnectWireless}
       />
+      {wirelessUsbSerial && (
+        <WirelessDialog
+          usbSerial={wirelessUsbSerial}
+          onClose={() => setWirelessUsbSerial(null)}
+          onConnected={reloadConfig}
+        />
+      )}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 {
   "name": "metacasting",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Mirroring de gafas VR Android para formación",
   "main": "./out/main/index.js",
   "author": "VedoxDev",
@@ -26,6 +26,7 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@tailwindcss/postcss": "^4.2.4",
     "electron-updater": "^6.3.9",
+    "lucide-react": "^1.24.0",
     "postcss": "^8.5.12",
     "tailwindcss": "^4.2.4"
   },

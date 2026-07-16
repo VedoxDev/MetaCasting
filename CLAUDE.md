@@ -35,7 +35,10 @@ The MVP is implemented. The app is functional end-to-end:
 
 - Electron + electron-vite + React 19 + TypeScript + Tailwind CSS 4.
 - **ADB device polling** (`adb devices` every 2s) with IPC broadcast on change.
-- **Device info** enrichment (model, manufacturer, battery, VR-capability detection).
+- **Device info** enrichment (model, manufacturer, battery, VR-capability detection, hardware
+  serial, USB/Wi-Fi connection type).
+- **Wireless (Wi-Fi) connection** — a guided `adb tcpip` + `adb connect` flow launched from the
+  Devices page; per-device config is keyed by hardware serial so pins survive USB ↔ Wi-Fi.
 - **scrcpy subprocess** management — spawn/kill, stdout/stderr piped to the renderer.
 - **Multi-runtime system** — per-device selectable scrcpy build (`quest2` / `standard` +
   user-supplied runtimes).
@@ -50,6 +53,7 @@ src/
   main/        ← Node/Electron main process
     index.ts     — app bootstrap, BrowserWindow, all ipcMain handlers
     adb.ts       — device polling, device info, raw adb command runner
+    wireless.ts  — Wi-Fi pairing flow (tcpip + IP detect + connect/disconnect)
     scrcpy.ts    — cast subprocess lifecycle + Spanish error mapping
     config.ts    — Profile/Settings types, load/save, buildScrcpyArgs()
     runtimes.ts  — scrcpy runtime discovery + auto-detection
@@ -178,9 +182,9 @@ field is set. `extraArgs` is always appended last.
 ```jsonc
 {
   "activeProfileId": "manual",      // default profile when a device is neither pinned nor auto-detected
-  "deviceNames":    {},             // serial → human-readable name
-  "deviceProfiles": {},             // serial → profileId (per-device pinned profile)
-  "deviceRuntimes": {}              // serial → runtime name (per-device pinned runtime)
+  "deviceNames":    {},             // hwSerial → human-readable name
+  "deviceProfiles": {},             // hwSerial → profileId (per-device pinned profile)
+  "deviceRuntimes": {}              // hwSerial → runtime name (per-device pinned runtime)
 }
 ```
 
@@ -198,8 +202,14 @@ no code change is needed to add a preset.
   (JSON diff). The last list is cached and served to late-subscribing pages via
   `devices:getCached`.
 - `getDeviceInfo(serial)` enriches a device: model / manufacturer (`getprop`), battery
-  (`dumpsys battery`), and VR capability (`pm list features` →
-  `android.hardware.vr.high_performance`).
+  (`dumpsys battery`), VR capability (`pm list features` →
+  `android.hardware.vr.high_performance`), the stable **hardware serial** (`ro.serialno`), and
+  a `connection` flag (`usb` / `wireless`, inferred from an `ip:port`-shaped transport serial).
+- **Identity vs. targeting.** The adb *transport serial* is what commands target with `-s` — a
+  USB serial, or `ip:5555` once wireless. The *hardware serial* (`ro.serialno`) is identical
+  over both transports and is the key for all per-device config maps, so a headset keeps its
+  pinned name/profile/runtime across USB ↔ Wi-Fi. Over USB the two are already equal, so
+  existing pins are unaffected.
 - `restartAdbServer()` (kill-server + start-server) backs the "request permission" flow, used to
   re-trigger the on-headset ADB authorization prompt.
 - `runAdbCommand(args)` powers the Console page — returns combined stdout+stderr and exit code.
@@ -213,6 +223,23 @@ Renderer status text per state:
 | none           | "Buscando dispositivo..." (neutral, spinner)                                     |
 
 ---
+
+## Wireless connection (`src/main/wireless.ts`)
+
+Classic `tcpip` + `connect` flow (no Android-11 pairing code). Bootstrapped over USB, driven
+from the Devices page (`WirelessDialog`):
+
+1. `enableTcpip(usbSerial)` — reads the headset WLAN IPv4 from `adb shell ip route` (the `src`
+   address on the `wlan` line, parsed in Node) *before* running `adb -s <serial> tcpip 5555`,
+   since flipping to TCP/IP briefly restarts adbd. Returns the detected IP (may be undefined →
+   the UI asks the user to type it).
+2. `connectWireless(ip)` — `adb connect <ip>:5555`, retried a few times while adbd comes back up.
+   Returns the new `ip:5555` transport serial on success.
+3. `disconnectWireless(serial)` — `adb disconnect`.
+
+Once connected the user unplugs the cable; the poller then sees the device as `ip:5555` and,
+because config is keyed by hardware serial, it keeps its pins. IPC: `wireless:enable`,
+`wireless:connect`, `wireless:disconnect`.
 
 ## scrcpy subprocess management (`src/main/scrcpy.ts`)
 
@@ -299,7 +326,6 @@ logging," this is the gap — do not assume it exists.
 
 ## Out of scope (MVP)
 
-- Wireless ADB / Wi-Fi connection (USB only for now)
 - Multiple simultaneous device mirroring
 - Recording or screenshot capture
 - Real auto-update mechanism

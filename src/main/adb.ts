@@ -74,11 +74,18 @@ export function getCachedDevices(): Device[] {
 }
 
 export interface DeviceInfo {
-  serial: string
+  serial: string                          // adb transport serial (USB serial or ip:port)
+  hwSerial: string                        // stable hardware serial (ro.serialno) — identity key
+  connection: 'usb' | 'wireless'
   model: string
   manufacturer: string
   battery: number | null
   isVr: boolean
+}
+
+// A wireless transport serial looks like "192.168.1.42:5555".
+function isWirelessSerial(serial: string): boolean {
+  return /^\d{1,3}(\.\d{1,3}){3}:\d+$/.test(serial)
 }
 
 function runAdbSerial(serial: string, args: string[]): Promise<string> {
@@ -92,18 +99,24 @@ function runAdbSerial(serial: string, args: string[]): Promise<string> {
 }
 
 export async function getDeviceInfo(serial: string): Promise<DeviceInfo> {
-  const [model, manufacturer, batteryOut, featuresOut] = await Promise.all([
+  const [model, manufacturer, batteryOut, featuresOut, hwSerialOut] = await Promise.all([
     runAdbSerial(serial, ['shell', 'getprop', 'ro.product.model']),
     runAdbSerial(serial, ['shell', 'getprop', 'ro.product.manufacturer']),
     runAdbSerial(serial, ['shell', 'dumpsys', 'battery']),
     runAdbSerial(serial, ['shell', 'pm', 'list', 'features']),
+    runAdbSerial(serial, ['shell', 'getprop', 'ro.serialno']),
   ])
 
   const batteryMatch = batteryOut.match(/level:\s*(\d+)/)
   const battery = batteryMatch ? parseInt(batteryMatch[1]) : null
   const isVr = featuresOut.includes('android.hardware.vr.high_performance')
+  // ro.serialno is identical over USB and Wi-Fi, so it is the stable identity
+  // key for per-device config. Over USB the adb serial already equals it; fall
+  // back to the transport serial if the prop is unavailable.
+  const hwSerial = hwSerialOut || serial
+  const connection: DeviceInfo['connection'] = isWirelessSerial(serial) ? 'wireless' : 'usb'
 
-  return { serial, model: model || serial, manufacturer, battery, isVr }
+  return { serial, hwSerial, connection, model: model || serial, manufacturer, battery, isVr }
 }
 
 export function runAdbCommand(args: string[]): Promise<{ out: string; code: number }> {

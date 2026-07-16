@@ -86,7 +86,7 @@ function InfoModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="px-5 py-3 border-t border-slate-100 flex justify-between items-center">
-          <span className="text-[10px] text-slate-500 font-mono">MetaCasting v1.0.0</span>
+          <span className="text-[10px] text-slate-500 font-mono">MetaCasting v{__APP_VERSION__}</span>
           <button
             onClick={onClose}
             className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-50"
@@ -161,7 +161,7 @@ export function TitleBar() {
       >
         <div className="flex items-center gap-2.5 px-4">
           <span className="text-white text-sm font-semibold tracking-wide">MetaCasting</span>
-          <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.45)' }}>v1.0.0</span>
+          <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.45)' }}>v{__APP_VERSION__}</span>
         </div>
 
         <div
