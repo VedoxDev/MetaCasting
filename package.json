@@ -1,6 +1,6 @@
 {
   "name": "metacasting",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Mirroring de gafas VR Android para formación",
   "main": "./out/main/index.js",
   "author": "VedoxDev",
